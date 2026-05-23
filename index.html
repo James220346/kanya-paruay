@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กัญญาพารวย - ระบบจองตัวเลข</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Mali', 'sans-serif'], display: ['Chonburi', 'cursive'] },
+                    colors: { primary: '#EC4899', primaryDark: '#BE185D', secondary: '#F59E0B' },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'float-delayed': 'float 3s ease-in-out 1.5s infinite',
+                        'color-cycle': 'colorCycle 4s linear infinite',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+                        colorCycle: { '0%': { filter: 'hue-rotate(0deg)' }, '100%': { filter: 'hue-rotate(360deg)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .btn-bounce:hover:not(:disabled) { transform: scale(1.05) translateY(-2px); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        body { 
+            background-color: #fdf2f8; 
+            background-image: radial-gradient(#fbcfe8 1px, transparent 1px); 
+            background-size: 20px 20px; 
+            overflow-x: hidden; 
+        }
+
+        @keyframes fallDown {
+            0% { transform: translateY(-10vh); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(110vh); opacity: 0; }
+        }
+        @keyframes swaySide { 0% { margin-left: 0px; } 100% { margin-left: 50px; } }
+        .falling-item {
+            position: fixed; top: -10vh; z-index: -1; pointer-events: none; user-select: none;
+            animation-name: fallDown, swaySide; animation-iteration-count: infinite, infinite;
+            animation-timing-function: linear, ease-in-out; animation-direction: normal, alternate;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-10">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-100">
+        <div class="w-full mx-auto px-4 md:px-8 relative flex flex-col md:flex-row justify-center items-center min-h-[70px]">
+            <div class="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 z-10 hidden md:flex items-center gap-2">
+                <div class="inline-flex items-center gap-1.5 text-sm bg-pink-100 text-primaryDark px-3 py-1.5 rounded-full font-semibold border border-pink-200 shadow-sm">
+                    <i data-feather="calendar" class="w-4 h-4"></i> รอบ: <span class="draw-date-display">...</span>
+                </div>
+                <div id="clock" class="inline-flex items-center gap-1.5 text-sm bg-white text-primary px-3 py-1.5 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
+                <button onclick="adminReset()" class="p-1.5 bg-slate-100 text-slate-400 hover:text-red-500 rounded-full transition-colors" title="รีเซ็ตกระดาน (แอดมิน)"><i data-feather="refresh-cw" class="w-3 h-3"></i></button>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 group cursor-pointer z-20 py-3 md:py-0">
+                <div class="animate-float drop-shadow-md"><span class="inline-block text-4xl font-bold text-primary">𓆩♡𓆪</span></div>
+                <div class="animate-float-delayed">
+                    <h1 class="text-3xl md:text-4xl font-display text-transparent bg-clip-text bg-gradient-to-r from-primaryDark to-primary animate-color-cycle py-1 drop-shadow-sm tracking-wider">กัญญาพารวย</h1>
+                </div>
+            </div>
+
+            <div class="w-full flex justify-center items-center gap-2 mt-1 mb-2 md:hidden">
+                <div class="inline-flex items-center gap-1.5 text-xs bg-pink-100 text-primaryDark px-3 py-1 rounded-full font-semibold border border-pink-200 shadow-sm">
+                    <i data-feather="calendar" class="w-3 h-3"></i> <span class="draw-date-display">...</span>
+                </div>
+                <div id="clock-mobile" class="inline-flex items-center gap-1.5 text-xs bg-white text-primary px-3 py-1 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
+                <button onclick="adminReset()" class="p-1 bg-slate-100 text-slate-400 hover:text-red-500 rounded-full transition-colors"><i data-feather="refresh-cw" class="w-3 h-3"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 mt-2">
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <div class="flex-1 bg-white/80 backdrop-blur-sm p-4 md:p-6 rounded-3xl shadow-lg border border-pink-100">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ แผงเศรษฐี ถูก2ตัวบนรับ 500 ถูก2ตัวล่างรับ 3500</h2>
+                        <p class="text-sm text-slate-500">จิ้มเลือกเลขที่ชอบได้เลยจ้า</p>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-4 text-sm font-semibold text-slate-600 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded-full bg-white border-2 border-pink-200"></div> ว่าง</div>
+                        <div class="flex items-center gap-1.5"><div class="w-4 h-4 rounded-full bg-primary shadow-sm shadow-primary/40"></div> เลือกแล้ว</div>
+                        <div class="flex items-center gap-1.5 text-blue-500 text-lg">💙 <span class="text-sm text-slate-600 ml-1">:ซื้อแล้ว</span></div>
+                    </div>
+                </div>
+
+                <div class="flex sm:hidden justify-center items-center gap-4 text-xs font-semibold text-slate-600 mb-6 bg-white py-2 rounded-full border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-white border border-pink-200"></div> ว่าง</div>
+                    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-primary"></div> เลือกแล้ว</div>
+                    <div class="flex items-center gap-1 text-blue-500 text-base leading-none">💙 <span class="text-xs text-blue-600 ml-0.5">ซื้อแล้ว</span></div>
+                </div>
+
+                <div id="number-grid" class="grid grid-cols-5 sm:grid-cols-10 gap-2 md:gap-3"></div>
+            </div>
+
+            <div class="w-full lg:w-[420px] flex flex-col gap-4">
+                <div class="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-pink-100 sticky top-28">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-pink-50 pb-3">
+                        <i data-feather="shopping-bag" class="w-5 h-5 text-primary"></i> ตะกร้าพารวย
+                    </h2>
+
+                    <div id="selected-list" class="min-h-[80px] flex flex-wrap gap-2 mb-5 p-4 bg-pink-50/50 rounded-2xl border border-pink-100 items-start content-start transition-all">
+                        <p class="text-pink-400 text-sm w-full text-center py-3" id="empty-msg">ยังไม่ได้จิ้มเลขเลยน้าา ~</p>
+                    </div>
+
+                    <form id="booking-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">วิธีการชำระเงิน</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="relative flex items-center justify-center gap-2 p-3 border-2 border-pink-300 bg-pink-50 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors payment-option group shadow-sm">
+                                    <input type="radio" name="payment_type" value="pay_now" class="hidden" checked onchange="togglePayment(this)">
+                                    <i data-feather="image" class="w-4 h-4 text-primary payment-icon"></i>
+                                    <span class="font-bold text-sm text-primaryDark payment-text">โอนเลย</span>
+                                </label>
+                                <label class="relative flex items-center justify-center gap-2 p-3 border-2 border-slate-200 bg-white rounded-xl cursor-pointer hover:bg-slate-50 transition-colors payment-option group">
+                                    <input type="radio" name="payment_type" value="pay_later" class="hidden" onchange="togglePayment(this)">
+                                    <i data-feather="clock" class="w-4 h-4 text-slate-400 payment-icon"></i>
+                                    <span class="font-bold text-sm text-slate-500 payment-text">จ่ายทีหลัง</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5 ml-1">ชื่อคนดวงดี</label>
+                            <input type="text" id="buyer-name" required class="w-full px-4 py-3 bg-white border-2 border-pink-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-medium text-slate-700 placeholder-slate-300" placeholder="ใส่ชื่อเล่นหรือชื่อจริงได้เลยจ้า">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5 ml-1">เลขละ 50 (บาท)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold text-lg">฿</span>
+                                <input type="number" id="price-per-num" required min="1" class="w-full pl-10 pr-4 py-3 bg-white border-2 border-pink-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-bold text-lg text-slate-700" placeholder="0" value="50">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 mt-2 border-t-2 border-dashed border-pink-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-slate-500 font-semibold text-sm">จำนวนเลขที่เลือก</span>
+                                <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full"><span id="total-count">0</span> ตัว</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-700 font-bold">ยอดรวมทั้งหมด</span>
+                                <span class="text-3xl font-extrabold text-primary drop-shadow-sm">฿<span id="total-price">0</span></span>
+                            </div>
+                        </div>
+
+                        <div id="payment-details-section" class="space-y-4">
+                            <div class="bg-blue-50/80 p-4 rounded-2xl border border-blue-200 mt-2">
+                                <h3 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-1.5">
+                                    <i data-feather="credit-card" class="w-4 h-4"></i> บัญชีสำหรับโอนเงิน
+                                </h3>
+                                <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-blue-100">
+                                    <div class="w-12 h-12 flex items-center justify-center shrink-0 bg-green-600 rounded-xl text-white font-black text-2xl shadow-sm">𝒦+</div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-800 leading-tight">น.ส สุกัญญา ธรรมบัวชา</p>
+                                        <p class="text-sm text-slate-600 font-medium font-sans mt-0.5" id="bank-acc">126-1-36691-2</p>
+                                    </div>
+                                    <button type="button" onclick="copyAccount()" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="คัดลอกเลขบัญชี">
+                                        <i data-feather="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-blue-600 mt-3 text-center bg-blue-100 p-2 rounded-lg font-bold">⚠️ โอนเงินเสร็จแล้ว กดปุ่มยืนยันด้านล่างได้เลยจ้า</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-btn" disabled class="w-full py-4 bg-gradient-to-r from-primary to-primaryDark text-white rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex justify-center items-center gap-2">
+                            <i data-feather="check-circle" class="w-5 h-5"></i> โอนแล้ว ยืนยันการซื้อ!
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-90 transition-transform duration-300 shadow-2xl border-4 border-pink-100" id="modal-content">
+            <div class="relative w-20 h-20 mx-auto mb-4">
+                <div class="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-70" id="modal-ping-bg"></div>
+                <div class="relative w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto shadow-inner" id="modal-icon-bg">
+                    <i data-feather="check" class="w-10 h-10" id="modal-icon"></i>
+                </div>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2" id="modal-title">รับยอดแล้วจ้า! 🎉</h3>
+            <p class="text-pink-600 mb-6 text-sm font-bold bg-pink-50 p-3 rounded-xl border border-pink-200" id="modal-desc">รบกวนแคปหน้าจอนี้ แล้วส่งสลิปทางแชทให้แม่ค้าด้วยนะคะ 💖</p>
+            
+            <div class="bg-gradient-to-br from-pink-50 to-orange-50 p-5 rounded-2xl text-left mb-6 border border-pink-200 relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 text-pink-200/50 transform rotate-[-15deg] pointer-events-none"><i data-feather="award" class="w-24 h-24"></i></div>
+                <div class="relative z-10">
+                    <p class="text-sm text-slate-500 mb-2 border-b border-pink-200/50 pb-2">คุณลูกค้า: <span class="font-bold text-slate-800 text-base" id="receipt-name"></span></p>
+                    <p class="text-sm text-slate-500 mb-2">เลขพารวย:</p>
+                    <div class="font-bold text-primary text-lg mb-3 break-words" id="receipt-numbers"></div>
+                    <p class="text-sm text-slate-500 flex justify-between items-center bg-white p-2 rounded-lg mb-2">
+                        <span>ยอดรวมทั้งหมด:</span> <span class="font-bold text-primaryDark text-xl">฿<span id="receipt-total"></span></span>
+                    </p>
+                    <div id="receipt-status"></div>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="w-full py-3.5 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-700 transition-colors shadow-md">ปิดหน้าต่างนี้</button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full font-medium text-sm transition-opacity duration-300 opacity-0 pointer-events-none z-[200]">
+        คัดลอกเลขบัญชีแล้ว!
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, runTransaction, set, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // Config ของคุณ
+        const firebaseConfig = {
+            apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
+            authDomain: "kanya-paruay.firebaseapp.com",
+            databaseURL: "https://kanya-paruay-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kanya-paruay",
+            storageBucket: "kanya-paruay.firebasestorage.app",
+            messagingSenderId: "225424577877",
+            appId: "1:225424577877:web:80e1796910dad7109a0bdc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const numbersRef = ref(db, 'sold_out_numbers');
+
+        let soldOutNumbers = [];
+        let selectedNumbers = [];
+
+        try { feather.replace(); } catch(e) {}
+
+        function createFallingBackground() {
+            const container = document.createElement('div');
+            container.className = 'fixed inset-0 pointer-events-none z-[-1] overflow-hidden';
+            document.body.prepend(container);
+            const items = ['💖', '✨', '🌸', '💕'];
+            for (let i = 0; i < 25; i++) {
+                const el = document.createElement('div');
+                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.className = 'falling-item opacity-40 md:opacity-60'; 
+                el.style.left = `${Math.random() * 100}vw`;
+                el.style.fontSize = `${Math.random() * 1.5 + 0.8}rem`;
+                el.style.animationDuration = `${Math.random() * 6 + 6}s, ${Math.random() * 3 + 2}s`;
+                el.style.animationDelay = `${Math.random() * 10}s, ${Math.random() * 10}s`;
+                container.appendChild(el);
+            }
+        }
+        createFallingBackground();
+
+        function calculateNextDrawDate() {
+            const now = new Date();
+            let year = now.getFullYear(); let month = now.getMonth(); let date = now.getDate(); let hours = now.getHours();
+            let nextDate, nextMonth = month, nextYear = year;
+            if (date < 1 || (date === 1 && hours < 16)) { nextDate = 1; } 
+            else if (date < 16 || (date === 16 && hours < 16)) { nextDate = 16; } 
+            else { nextDate = 1; nextMonth++; if (nextMonth > 11) { nextMonth = 0; nextYear++; } }
+            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${nextDate} ${thaiMonths[nextMonth]} ${(nextYear + 543).toString().slice(-2)}`;
+        }
+        document.querySelectorAll('.draw-date-display').forEach(el => el.innerText = calculateNextDrawDate());
+
+        function updateClock() {
+            const timeString = new Date().toLocaleTimeString('th-TH');
+            const c1 = document.getElementById('clock'); const c2 = document.getElementById('clock-mobile');
+            if(c1) c1.innerText = timeString; if(c2) c2.innerText = timeString;
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        onValue(numbersRef, (snapshot) => {
+            soldOutNumbers = snapshot.val() || [];
+            window.renderGrid();
+        });
+
+        window.renderGrid = function() {
+            const gridContainer = document.getElementById('number-grid');
+            if (!gridContainer) return;
+            gridContainer.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const numStr = i.toString().padStart(2, '0');
+                const btn = document.createElement('button');
+                btn.type = 'button'; 
+                btn.className = `aspect-square flex items-center justify-center text-lg md:text-xl font-extrabold rounded-2xl border-2 transition-all duration-200 select-none `;
+                
+                if (soldOutNumbers.includes(numStr)) {
+                    btn.classList.add('bg-gradient-to-br', 'from-sky-50', 'to-purple-100', 'border-indigo-100', 'cursor-not-allowed', 'shadow-inner');
+                    btn.innerHTML = `<span class="text-xl md:text-2xl animate-float" style="animation-duration: 4s;">💙</span>`;
+                    btn.disabled = true;
+                } else {
+                    btn.innerText = numStr;
+                    btn.classList.add('bg-white', 'text-primary', 'border-pink-200', 'hover:border-primary', 'shadow-sm', 'btn-bounce');
+                    if (selectedNumbers.includes(numStr)) {
+                        btn.classList.remove('bg-white', 'text-primary', 'border-pink-200');
+                        btn.classList.add('bg-primary', 'text-white', 'border-primary');
+                    }
+                    btn.onclick = () => window.toggleNumber(numStr, btn);
+                }
+                gridContainer.appendChild(btn);
+            }
+        };
+
+        window.toggleNumber = function(numStr, btnElement) {
+            const index = selectedNumbers.indexOf(numStr);
+            if (index === -1) {
+                selectedNumbers.push(numStr);
+                btnElement.classList.remove('bg-white', 'text-primary', 'border-pink-200');
+                btnElement.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/40');
+            } else {
+                selectedNumbers.splice(index, 1);
+                btnElement.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/40');
+                btnElement.classList.add('bg-white', 'text-primary', 'border-pink-200');
+            }
+            selectedNumbers.sort((a, b) => parseInt(a) - parseInt(b));
+            window.updateCart();
+        };
+
+        window.updateCart = function() {
+            const selectedListEl = document.getElementById('selected-list');
+            const emptyMsg = document.getElementById('empty-msg');
+            const submitBtn = document.getElementById('submit-btn');
+            const totalCountEl = document.getElementById('total-count');
+            const totalPriceEl = document.getElementById('total-price');
+            const priceInput = document.getElementById('price-per-num');
+
+            if(!selectedListEl || !emptyMsg || !submitBtn) return;
+            selectedListEl.querySelectorAll('.num-badge').forEach(el => el.remove());
+
+            if (selectedNumbers.length === 0) {
+                emptyMsg.style.display = 'block'; submitBtn.disabled = true;
+            } else {
+                emptyMsg.style.display = 'none'; submitBtn.disabled = false;
+                selectedNumbers.forEach(num => {
+                    const span = document.createElement('span');
+                    span.className = 'num-badge bg-white text-primary px-3 py-1.5 rounded-xl font-bold text-sm border-2 border-pink-200 shadow-sm animate-float-delayed';
+                    span.innerText = num; selectedListEl.appendChild(span);
+                });
+            }
+            const count = selectedNumbers.length;
+            const price = parseInt(priceInput ? priceInput.value : 50) || 0;
+            if(totalCountEl) totalCountEl.innerText = count; 
+            if(totalPriceEl) totalPriceEl.innerText = (count * price).toLocaleString();
+        };
+
+        const priceInput = document.getElementById('price-per-num');
+        if(priceInput) priceInput.addEventListener('input', window.updateCart);
+
+        // ระบบจอง (ล็อกเลขทันที และบันทึกชื่อลูกค้าลง Database)
+        const bookingForm = document.getElementById('booking-form');
+        if(bookingForm) {
+            bookingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (selectedNumbers.length === 0) return;
+                
+                const paymentType = document.querySelector('input[name="payment_type"]:checked')?.value || 'pay_now';
+                const submitBtn = document.getElementById('submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="animate-spin" data-feather="loader"></i> กำลังอัปโหลดข้อมูล...';
+                try { feather.replace(); } catch(e){}
+
+                runTransaction(numbersRef, (currentData) => {
+                    let sold = currentData || [];
+                    if (selectedNumbers.some(n => sold.includes(n))) return; // ป้องกันซื้อซ้ำ
+                    return [...sold, ...selectedNumbers];
+                }).then(async (res) => {
+                    if (res.committed) {
+                        try {
+                            const name = document.getElementById('buyer-name').value;
+                            const price = parseInt(priceInput.value) || 50;
+                            const total = selectedNumbers.length * price;
+
+                            // บันทึกข้อมูลการซื้อลง Database
+                            const bookingData = {
+                                customerName: name,
+                                selectedNumbers: selectedNumbers,
+                                totalPrice: total,
+                                paymentMethod: paymentType,
+                                purchaseDate: new Date().toLocaleString('th-TH'),
+                                timestamp: Date.now()
+                            };
+                            await set(push(ref(db, 'customer_bookings')), bookingData);
+
+                            // อัปเดตหน้าตาใบเสร็จ
+                            if(document.getElementById('receipt-name')) document.getElementById('receipt-name').innerText = name;
+                            if(document.getElementById('receipt-numbers')) document.getElementById('receipt-numbers').innerHTML = selectedNumbers.map(n => `<span class="inline-block bg-pink-100 text-primary px-2 py-1 rounded-md m-0.5 border border-pink-200 shadow-sm">${n}</span>`).join(' ');
+                            if(document.getElementById('receipt-total')) document.getElementById('receipt-total').innerText = total.toLocaleString();
+
+                            const statusEl = document.getElementById('receipt-status');
+                            const modalTitle = document.getElementById('modal-title');
+                            const modalDesc = document.getElementById('modal-desc');
+
+                            if (paymentType === 'pay_now') {
+                                statusEl.innerHTML = '<i data-feather="check-circle" class="w-4 h-4"></i> ซื้อเลขเรียบร้อย'; 
+                                statusEl.className = 'text-xs text-green-700 font-bold flex items-center justify-center gap-1.5 bg-green-100 py-2 rounded-lg border border-green-300';
+                                modalTitle.innerText = "ซื้อเลขสำเร็จ! 🎉";
+                                modalDesc.innerText = "รบกวนแคปหน้าจอนี้ แล้วส่งสลิปโอนเงินทางแชทให้แม่ค้าด้วยนะคะ 💖";
+                            } else {
+                                statusEl.innerHTML = '<i data-feather="clock" class="w-4 h-4"></i> ซื้อสำเร็จ (รอการชำระเงิน)'; 
+                                statusEl.className = 'text-xs text-amber-700 font-bold flex items-center justify-center gap-1.5 bg-amber-100 py-2 rounded-lg border border-amber-300';
+                                modalTitle.innerText = ":ซื้อเลขสำเร็จ! ⏱️";
+                                modalDesc.innerText = "แคปหน้าจอนี้ส่งไปทางแชทกดปุ่มสีฟ้าข้างๆจอเลยนะคะ 💖";
+                            }
+                            try { feather.replace(); } catch(e){}
+
+                            // แสดง Modal
+                            const modal = document.getElementById('success-modal');
+                            modal.classList.remove('hidden');
+                            setTimeout(() => { 
+                                modal.classList.remove('opacity-0'); 
+                                document.getElementById('modal-content').classList.replace('scale-90', 'scale-100'); 
+                            }, 10);
+
+                        } catch(uploadError) {
+                            console.error("Error saving data:", uploadError);
+                            alert(":ซื้อเลขสำเร็จแล้ว! รบกวนแคปจอและแจ้งทางแชทได้เลย!");
+                        }
+                    } else {
+                        alert("ขออภัยครับ มีคนจองเลขนั้นตัดหน้าไปแล้ว กรุณาเลือกเลขใหม่จ้า!");
+                        selectedNumbers = [];
+                        window.updateCart();
+                    }
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = paymentType === 'pay_now' ? '<i data-feather="check-circle" class="w-5 h-5"></i> โอนแล้ว ยืนยันการซื้อ!' : '<i data-feather="clock" class="w-5 h-5"></i> จองไว้ก่อน (จ่ายทีหลัง)';
+                    try { feather.replace(); } catch(e){}
+                }).catch((error) => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i data-feather="check-circle" class="w-5 h-5"></i> ลองใหม่อีกครั้ง';
+                    alert("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
+                });
+            });
+        }
+
+        window.togglePayment = function(radio) {
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('border-pink-300', 'bg-pink-50'); opt.classList.add('border-slate-200', 'bg-white');
+                const pt = opt.querySelector('.payment-text'); const pi = opt.querySelector('.payment-icon');
+                if(pt) { pt.classList.remove('text-primaryDark'); pt.classList.add('text-slate-500'); }
+                if(pi) { pi.classList.remove('text-primary'); pi.classList.add('text-slate-400'); }
+            });
+            const parent = radio.closest('.payment-option');
+            if(parent) {
+                parent.classList.remove('border-slate-200', 'bg-white'); parent.classList.add('border-pink-300', 'bg-pink-50');
+                const pt = parent.querySelector('.payment-text'); const pi = parent.querySelector('.payment-icon');
+                if(pt) { pt.classList.remove('text-slate-500'); pt.classList.add('text-primaryDark'); }
+                if(pi) { pi.classList.remove('text-slate-400'); pi.classList.add('text-primary'); }
+            }
+            const paymentSection = document.getElementById('payment-details-section');
+            const submitBtn = document.getElementById('submit-btn');
+            if (radio.value === 'pay_now') {
+                if(paymentSection) paymentSection.style.display = 'block';
+                if(submitBtn) submitBtn.innerHTML = '<i data-feather="check-circle" class="w-5 h-5"></i> โอนแล้ว ยืนยันการซื้อ!';
+            } else {
+                if(paymentSection) paymentSection.style.display = 'none';
+                if(submitBtn) submitBtn.innerHTML = '<i data-feather="clock" class="w-5 h-5"></i> จองไว้ก่อน (จ่ายทีหลัง)';
+            }
+            try { feather.replace(); } catch(e){}
+        };
+
+        window.copyAccount = function() {
+            const accEl = document.getElementById('bank-acc'); if(!accEl) return;
+            const acc = accEl.innerText.replace(/-/g, '');
+            navigator.clipboard.writeText(acc).then(() => { showToast(); }).catch(err => {
+                const textArea = document.createElement("textarea"); textArea.value = acc; document.body.appendChild(textArea);
+                textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); showToast();
+            });
+        };
+        
+        function showToast() { 
+            const toast = document.getElementById('toast'); 
+            if(toast) { toast.classList.remove('opacity-0'); setTimeout(() => toast.classList.add('opacity-0'), 2000); } 
+        }
+
+        window.closeModal = function() {
+            const modal = document.getElementById('success-modal');
+            const modalContent = document.getElementById('modal-content');
+            if(modal) modal.classList.add('opacity-0'); 
+            if(modalContent) { modalContent.classList.replace('scale-100', 'scale-90'); }
+            setTimeout(() => {
+                if(modal) modal.classList.add('hidden');
+                selectedNumbers = [];
+                if(bookingForm) bookingForm.reset();
+                const defaultRadio = document.querySelector('input[name="payment_type"][value="pay_now"]');
+                if(defaultRadio) { defaultRadio.checked = true; window.togglePayment(defaultRadio); }
+                window.renderGrid(); window.updateCart();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        };
+
+        window.adminReset = function() {
+            if(confirm("ต้องการล้างกระดานและลบข้อมูลที่จองทั้งหมดเพื่อเริ่มรอบใหม่ใช่หรือไม่?")) {
+                set(numbersRef, []).then(() => { alert('ล้างกระดานเรียบร้อย!'); }).catch((err) => alert('Error: ' + err));
+            }
+        };
+
+    </script>
+<a href="https://m.me/mamax.mamx.9" target="_blank" 
+   class="fixed bottom-20 right-6 bg-[#0084FF] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform z-[99]">
+    <i data-feather="message-circle" class="w-8 h-8"></i>
+</a>
+</body>
+</html>
