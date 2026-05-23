@@ -63,7 +63,6 @@
                     <i data-feather="calendar" class="w-4 h-4"></i> รอบ: <span class="draw-date-display">...</span>
                 </div>
                 <div id="clock" class="inline-flex items-center gap-1.5 text-sm bg-white text-primary px-3 py-1.5 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
-                <button onclick="adminReset()" class="p-1.5 bg-slate-100 text-slate-400 hover:text-red-500 rounded-full transition-colors" title="รีเซ็ตกระดาน (แอดมิน)"><i data-feather="refresh-cw" class="w-3 h-3"></i></button>
             </div>
 
             <div class="flex items-center justify-center gap-3 group cursor-pointer z-20 py-3 md:py-0">
@@ -78,7 +77,6 @@
                     <i data-feather="calendar" class="w-3 h-3"></i> <span class="draw-date-display">...</span>
                 </div>
                 <div id="clock-mobile" class="inline-flex items-center gap-1.5 text-xs bg-white text-primary px-3 py-1 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
-                <button onclick="adminReset()" class="p-1 bg-slate-100 text-slate-400 hover:text-red-500 rounded-full transition-colors"><i data-feather="refresh-cw" class="w-3 h-3"></i></button>
             </div>
         </div>
     </nav>
@@ -237,10 +235,34 @@
         const db = getDatabase(app);
         const numbersRef = ref(db, 'sold_out_numbers');
 
+        // ตั้งค่า Telegram
+        const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
+        const TELEGRAM_CHAT_ID = "8151328238";
+
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}`;
+            try { await fetch(url); } catch (e) { console.error("Telegram error:", e); }
+        }
+
         let soldOutNumbers = [];
         let selectedNumbers = [];
 
         try { feather.replace(); } catch(e) {}
+
+        // ระบบรีเซ็ตอัตโนมัติ (วันที่ 1 และ 16)
+        const checkAutoReset = () => {
+            const day = new Date().getDate();
+            if (day === 1 || day === 16) {
+                const lastReset = localStorage.getItem('lastResetDate');
+                if (lastReset !== new Date().toDateString()) {
+                    set(numbersRef, []);
+                    set(ref(db, 'customer_bookings'), []);
+                    localStorage.setItem('lastResetDate', new Date().toDateString());
+                    console.log("Auto-reset completed");
+                }
+            }
+        };
+        checkAutoReset();
 
         function createFallingBackground() {
             const container = document.createElement('div');
@@ -311,9 +333,14 @@
             }
         };
 
+        // เพิ่มระบบจำกัดการเลือกสูงสุด 20 ตัว
         window.toggleNumber = function(numStr, btnElement) {
             const index = selectedNumbers.indexOf(numStr);
             if (index === -1) {
+                if (selectedNumbers.length >= 20) {
+                    alert("จองได้สูงสุด 20 เลขต่อครั้งจ้า 💖");
+                    return;
+                }
                 selectedNumbers.push(numStr);
                 btnElement.classList.remove('bg-white', 'text-primary', 'border-pink-200');
                 btnElement.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/40');
@@ -356,7 +383,6 @@
         const priceInput = document.getElementById('price-per-num');
         if(priceInput) priceInput.addEventListener('input', window.updateCart);
 
-        // ระบบจอง (ล็อกเลขทันที และบันทึกชื่อลูกค้าลง Database)
         const bookingForm = document.getElementById('booking-form');
         if(bookingForm) {
             bookingForm.addEventListener('submit', async function(e) {
@@ -371,7 +397,7 @@
 
                 runTransaction(numbersRef, (currentData) => {
                     let sold = currentData || [];
-                    if (selectedNumbers.some(n => sold.includes(n))) return; // ป้องกันซื้อซ้ำ
+                    if (selectedNumbers.some(n => sold.includes(n))) return; 
                     return [...sold, ...selectedNumbers];
                 }).then(async (res) => {
                     if (res.committed) {
@@ -380,7 +406,6 @@
                             const price = parseInt(priceInput.value) || 50;
                             const total = selectedNumbers.length * price;
 
-                            // บันทึกข้อมูลการซื้อลง Database
                             const bookingData = {
                                 customerName: name,
                                 selectedNumbers: selectedNumbers,
@@ -391,7 +416,10 @@
                             };
                             await set(push(ref(db, 'customer_bookings')), bookingData);
 
-                            // อัปเดตหน้าตาใบเสร็จ
+                            const payMethodText = paymentType === 'pay_now' ? 'โอนเลย' : 'จ่ายทีหลัง';
+                            const alertMessage = `🎉 มีคนจองเลขใหม่!\n👤 ชื่อ: ${name}\n🔢 เลข: ${selectedNumbers.join(', ')}\n💰 ยอดรวม: ${total} บาท\n💳 วิธีจ่าย: ${payMethodText}`;
+                            await sendToTelegram(alertMessage);
+
                             if(document.getElementById('receipt-name')) document.getElementById('receipt-name').innerText = name;
                             if(document.getElementById('receipt-numbers')) document.getElementById('receipt-numbers').innerHTML = selectedNumbers.map(n => `<span class="inline-block bg-pink-100 text-primary px-2 py-1 rounded-md m-0.5 border border-pink-200 shadow-sm">${n}</span>`).join(' ');
                             if(document.getElementById('receipt-total')) document.getElementById('receipt-total').innerText = total.toLocaleString();
@@ -413,7 +441,6 @@
                             }
                             try { feather.replace(); } catch(e){}
 
-                            // แสดง Modal
                             const modal = document.getElementById('success-modal');
                             modal.classList.remove('hidden');
                             setTimeout(() => { 
@@ -496,12 +523,6 @@
                 window.renderGrid(); window.updateCart();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 300);
-        };
-
-        window.adminReset = function() {
-            if(confirm("ต้องการล้างกระดานและลบข้อมูลที่จองทั้งหมดเพื่อเริ่มรอบใหม่ใช่หรือไม่?")) {
-                set(numbersRef, []).then(() => { alert('ล้างกระดานเรียบร้อย!'); }).catch((err) => alert('Error: ' + err));
-            }
         };
 
     </script>
