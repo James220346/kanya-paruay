@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้าน - กัญญาพารวย</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body { font-family: 'Mali', sans-serif; background-color: #f8fafc; }
+        /* หน้าจอล็อกอินบังไว้ก่อน */
+        #login-screen { position: fixed; inset: 0; background: white; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #admin-dashboard { display: none; }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <div id="login-screen">
+        <h1 class="text-3xl font-bold text-pink-600 mb-6">🔒 ระบบแอดมิน</h1>
+        <input type="password" id="admin-pass" class="w-64 p-4 text-center text-xl border-2 border-pink-200 rounded-2xl mb-4 focus:outline-none focus:border-pink-500" placeholder="ใส่รหัสผ่าน">
+        <button onclick="checkPassword()" class="w-64 py-3 bg-pink-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-pink-600 transition-all">เข้าสู่ระบบ</button>
+    </div>
+
+    <div id="admin-dashboard">
+        <div class="bg-pink-600 text-white p-4 sticky top-0 z-40 shadow-md flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2"><i data-feather="settings"></i> จัดการร้าน</h1>
+            <button onclick="resetBoard()" class="bg-red-500 px-3 py-1.5 rounded-lg font-bold text-sm flex items-center gap-1 hover:bg-red-600 transition-all shadow-sm">
+                <i data-feather="refresh-cw" class="w-4 h-4"></i> ล้างกระดาน
+            </button>
+        </div>
+
+        <div class="max-w-3xl mx-auto p-4 mt-4">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <p class="text-slate-500 text-sm font-semibold mb-1">ขายแล้ว</p>
+                    <p class="text-3xl font-bold text-blue-600"><span id="stats-count">0</span><span class="text-base text-slate-400">/100</span></p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <p class="text-slate-500 text-sm font-semibold mb-1">ยอดเงินรวม</p>
+                    <p class="text-3xl font-bold text-green-500">฿<span id="stats-money">0</span></p>
+                </div>
+            </div>
+
+            <h2 class="text-lg font-bold text-slate-700 mb-3 flex items-center gap-2">
+                <i data-feather="list" class="w-5 h-5"></i> รายการจองล่าสุด
+            </h2>
+            <div id="order-list" class="space-y-4">
+                <p class="text-center text-slate-400 py-10">กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
+            databaseURL: "https://kanya-paruay-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kanya-paruay"
+        };
+        const db = getDatabase(initializeApp(firebaseConfig));
+
+        feather.replace();
+
+        // 1. ระบบล็อกอิน
+        window.checkPassword = () => {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === "9999") { // รหัสผ่านแอดมินคือ 9999
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                loadData();
+            } else {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        };
+
+        // โหลดข้อมูลออเดอร์
+        function loadData() {
+            onValue(ref(db, 'customer_bookings'), (snapshot) => {
+                const orders = snapshot.val();
+                const listEl = document.getElementById('order-list');
+                let totalMoney = 0;
+                
+                if (!orders) {
+                    listEl.innerHTML = '<p class="text-center text-slate-400 py-10 bg-white rounded-2xl">ยังไม่มีคนจองเลยจ้า</p>';
+                    document.getElementById('stats-money').innerText = "0";
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                // แปลงข้อมูลเป็น Array แล้วเรียงจากใหม่ไปเก่า
+                const ordersArray = Object.entries(orders).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.timestamp - a.timestamp);
+
+                ordersArray.forEach(order => {
+                    totalMoney += order.totalPrice;
+                    
+                    const payStatus = order.paymentMethod === 'pay_now' 
+                        ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">โอนเลย</span>`
+                        : `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">จ่ายทีหลัง</span>`;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-800">${order.customerName}</h3>
+                                <p class="text-xs text-slate-400">${order.purchaseDate}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-primary text-lg">฿${order.totalPrice}</p>
+                                ${payStatus}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-sm text-slate-500 mb-1">เลขที่จอง:</p>
+                            <div class="flex flex-wrap gap-1">
+                                ${order.selectedNumbers.map(n => `<span class="bg-pink-50 border border-pink-100 text-pink-600 px-2 py-0.5 rounded-md text-sm font-bold">${n}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 flex justify-end">
+                            <button onclick="cancelOrder('${order.id}', '${order.selectedNumbers.join(',')}')" class="text-red-500 bg-red-50 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-100 transition-colors">
+                                <i data-feather="trash-2" class="w-4 h-4"></i> ยกเลิก (คืนเลข)
+                            </button>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+                
+                document.getElementById('stats-money').innerText = totalMoney.toLocaleString();
+                feather.replace();
+            });
+
+            // อัปเดตจำนวนเลขที่ขายไป
+            onValue(ref(db, 'sold_out_numbers'), (snapshot) => {
+                const sold = snapshot.val() || [];
+                document.getElementById('stats-count').innerText = sold.length;
+            });
+        }
+
+        // ระบบลบล้างกระดานทั้งหมด
+        window.resetBoard = async () => {
+            if(confirm("⚠️ คำเตือน: ยืนยันล้างกระดานงวดใหม่ใช่ไหม? ข้อมูลการจองและยอดเงินทั้งหมดจะหายไปทันที!")) {
+                await set(ref(db, 'sold_out_numbers'), []);
+                await set(ref(db, 'customer_bookings'), []);
+                alert("ล้างกระดานเรียบร้อย พร้อมเปิดรับยอดรอบใหม่จ้า!");
+            }
+        };
+
+        // ระบบยกเลิกออเดอร์รายคน (ลบชื่อและคืนเลขลงกระดาน)
+        window.cancelOrder = async (orderId, numbersStr) => {
+            if(confirm("แน่ใจนะว่าจะยกเลิกออเดอร์นี้? (เลขที่ลูกค้าเลือกจะถูกคืนกลับไปให้คนอื่นจองได้)")) {
+                const numbersToReturn = numbersStr.split(',');
+                
+                // 1. ลบออเดอร์จาก customer_bookings
+                await remove(ref(db, `customer_bookings/${orderId}`));
+                
+                // 2. ดึงเลขที่ขายแล้วทั้งหมดมา แล้วลบเลขของออเดอร์นี้ออก
+                get(ref(db, 'sold_out_numbers')).then(async (snapshot) => {
+                    let currentSold = snapshot.val() || [];
+                    const newSold = currentSold.filter(num => !numbersToReturn.includes(num));
+                    await set(ref(db, 'sold_out_numbers'), newSold);
+                    alert("ยกเลิกออเดอร์และคืนเลขสำเร็จ!");
+                });
+            }
+        };
+    </script>
+</body>
+</html>
