@@ -196,6 +196,46 @@
         </div>
     </div>
 
+    <div id="confirm-paid-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[150] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white/95 backdrop-blur-xl rounded-[2rem] max-w-sm w-full p-8 text-center shadow-2xl transform scale-95 transition-transform duration-300 border border-white" id="confirm-paid-content">
+            <div class="w-20 h-20 mx-auto bg-emerald-50 border-4 border-emerald-100 rounded-full flex items-center justify-center mb-5 relative">
+                <div class="absolute inset-0 rounded-full bg-emerald-400 opacity-20 animate-ping"></div>
+                <i data-feather="dollar-sign" class="w-10 h-10 text-emerald-500 relative z-10"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">รับเงินแล้วใช่ไหม?</h3>
+            <p class="text-slate-500 mb-8 font-medium">บิลนี้จะถูกอัปเดตสถานะเป็น <br><span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg mt-1 inline-block">"โอนเงินแล้ว"</span> ในระบบทันที</p>
+            
+            <div class="flex gap-3">
+                <button onclick="closePaidModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ปิดไว้ก่อน</button>
+                <button id="btn-submit-paid" class="flex-1 py-3.5 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                    <i data-feather="check" class="w-5 h-5"></i> ยืนยันเลย!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[150] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white/95 backdrop-blur-xl rounded-[2rem] max-w-sm w-full p-8 text-center shadow-2xl transform scale-95 transition-transform duration-300 border border-white" id="confirm-delete-content">
+            <div class="w-20 h-20 mx-auto bg-rose-50 border-4 border-rose-100 rounded-full flex items-center justify-center mb-5 relative">
+                <div class="absolute inset-0 rounded-full bg-rose-400 opacity-20 animate-ping"></div>
+                <i data-feather="trash-2" class="w-10 h-10 text-rose-500 relative z-10"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">ยึดคืนตัวเลข?</h3>
+            <p class="text-slate-500 mb-6 font-medium">ยืนยันการยกเลิกบิลออเดอร์นี้ และคืนตัวเลขกลับสู่แผงขายให้ลูกค้าคนอื่น</p>
+            <div class="bg-slate-50 rounded-xl p-3 mb-6 border border-slate-100">
+                <span class="text-xs text-slate-400 block mb-1">เลขที่จะยึดคืน:</span>
+                <span id="delete-numbers-display" class="font-bold text-indigo-600 text-lg tracking-wider"></span>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ยกเลิก</button>
+                <button id="btn-submit-delete" class="flex-1 py-3.5 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600 shadow-lg shadow-rose-200 transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                    <i data-feather="trash-2" class="w-5 h-5"></i> ยึดคืนเลย
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue, remove, runTransaction, set, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -216,10 +256,13 @@
         let globalSoldNumbers = [];
         let currentFilter = 'all';
 
+        // ตัวแปรสำหรับเก็บข้อมูลรอดำเนินการของ Modal
+        let pendingPaidId = null;
+        let pendingDeleteId = null;
+        let pendingDeleteNumbers = "";
+
         window.changeTheme = async function(themeName) {
-            try {
-                await set(ref(db, 'app_settings/current_theme'), themeName);
-            } catch (error) {}
+            try { await set(ref(db, 'app_settings/current_theme'), themeName); } catch (error) {}
         }
 
         window.openSlipModal = function(url) {
@@ -237,19 +280,86 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        window.markAsPaid = async function(bookingId) {
-            if (confirm("💸 ยืนยันว่าได้รับยอดโอนแล้วใช่ไหม?")) {
-                await update(ref(db, `customer_bookings/${bookingId}`), { paymentMethod: 'pay_now' });
-            }
+        // ==========================================
+        // ระบบแจ้งเตือน (Modal) สำหรับปุ่มรับเงิน
+        // ==========================================
+        window.markAsPaid = function(bookingId) {
+            pendingPaidId = bookingId;
+            const modal = document.getElementById('confirm-paid-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                modal.classList.remove('opacity-0'); 
+                document.getElementById('confirm-paid-content').classList.replace('scale-95', 'scale-100'); 
+            }, 10);
         }
 
-        window.deleteAndReturnNumbers = async function(bookingId, numbersString) {
-            if (confirm(`⚠️ ยืนยันยึดเลข [ ${numbersString} ] กลับเข้าแผง?`)) {
-                const numbersArr = numbersString.split(',');
-                await runTransaction(ref(db, 'sold_out_numbers'), (current) => current ? current.filter(n => !numbersArr.includes(n)) : []);
-                await remove(ref(db, `customer_bookings/${bookingId}`));
-            }
+        window.closePaidModal = function() {
+            const modal = document.getElementById('confirm-paid-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('confirm-paid-content').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); pendingPaidId = null; }, 300);
         }
+
+        document.getElementById('btn-submit-paid').addEventListener('click', async () => {
+            if (!pendingPaidId) return;
+            const btn = document.getElementById('btn-submit-paid');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="animate-spin w-5 h-5" data-feather="loader"></i> กำลังอัปเดต...';
+            feather.replace();
+
+            try {
+                await update(ref(db, `customer_bookings/${pendingPaidId}`), { paymentMethod: 'pay_now' });
+                window.closePaidModal();
+                setTimeout(() => { btn.innerHTML = originalContent; }, 300);
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+                btn.innerHTML = originalContent;
+            }
+        });
+
+        // ==========================================
+        // ระบบแจ้งเตือน (Modal) สำหรับปุ่มยึดคืนเลข
+        // ==========================================
+        window.deleteAndReturnNumbers = function(bookingId, numbersString) {
+            pendingDeleteId = bookingId;
+            pendingDeleteNumbers = numbersString;
+            document.getElementById('delete-numbers-display').innerText = numbersString;
+
+            const modal = document.getElementById('confirm-delete-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                modal.classList.remove('opacity-0'); 
+                document.getElementById('confirm-delete-content').classList.replace('scale-95', 'scale-100'); 
+            }, 10);
+        }
+
+        window.closeDeleteModal = function() {
+            const modal = document.getElementById('confirm-delete-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('confirm-delete-content').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); pendingDeleteId = null; }, 300);
+        }
+
+        document.getElementById('btn-submit-delete').addEventListener('click', async () => {
+            if (!pendingDeleteId) return;
+            const btn = document.getElementById('btn-submit-delete');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="animate-spin w-5 h-5" data-feather="loader"></i> กำลังทำงาน...';
+            feather.replace();
+
+            try {
+                const numbersArr = pendingDeleteNumbers.split(',');
+                await runTransaction(ref(db, 'sold_out_numbers'), (current) => current ? current.filter(n => !numbersArr.includes(n)) : []);
+                await remove(ref(db, `customer_bookings/${pendingDeleteId}`));
+                window.closeDeleteModal();
+                setTimeout(() => { btn.innerHTML = originalContent; }, 300);
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+                btn.innerHTML = originalContent;
+            }
+        });
+
+        // ==========================================
 
         window.clearEntireBoard = async function() {
             if (confirm("⚠️ ล้างกระดานและบิลทั้งหมด?") && prompt("พิมพ์ 'ยืนยัน' เพื่อดำเนินการ") === "ยืนยัน") {
@@ -299,7 +409,6 @@
                 const tr = document.createElement('tr');
                 tr.className = "bg-white/80 hover:bg-white transition-all group shadow-sm hover:shadow-md";
                 
-                // ให้เวลาเป็นสีน้ำเงินอ่อน
                 let timeText = (booking.purchaseDate || booking.lastUpdated || '-').replace(', ', '<br><span class="text-xs text-blue-400">') + '</span>';
                 
                 let badge = booking.paymentMethod === 'pay_now' 
