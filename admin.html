@@ -3,168 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหลังบ้าน - กัญญาพารวย</title>
+    <title>ระบบหลังบ้าน - เบอร์หวยกัญญา</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Mali', 'sans-serif'], display: ['Chonburi', 'cursive'] },
+                    colors: { primary: '#EC4899', primaryDark: '#BE185D' }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Mali', sans-serif; background-color: #f8fafc; }
-        /* หน้าจอล็อกอินบังไว้ก่อน */
-        #login-screen { position: fixed; inset: 0; background: white; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #admin-dashboard { display: none; }
+        body { background-color: #f8fafc; overflow-x: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-slate-800 pb-20">
+<body class="text-slate-800 antialiased min-h-screen">
 
-    <div id="login-screen">
-        <h1 class="text-3xl font-bold text-pink-600 mb-6">🔒 ระบบแอดมิน</h1>
-        <input type="password" id="admin-pass" class="w-64 p-4 text-center text-xl border-2 border-pink-200 rounded-2xl mb-4 focus:outline-none focus:border-pink-500" placeholder="ใส่รหัสผ่าน">
-        <button onclick="checkPassword()" class="w-64 py-3 bg-pink-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-pink-600 transition-all">เข้าสู่ระบบ</button>
-    </div>
-
-    <div id="admin-dashboard">
-        <div class="bg-pink-600 text-white p-4 sticky top-0 z-40 shadow-md flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2"><i data-feather="settings"></i> จัดการร้าน</h1>
-            <button onclick="resetBoard()" class="bg-red-500 px-3 py-1.5 rounded-lg font-bold text-sm flex items-center gap-1 hover:bg-red-600 transition-all shadow-sm">
-                <i data-feather="refresh-cw" class="w-4 h-4"></i> ล้างกระดาน
-            </button>
-        </div>
-
-        <div class="max-w-3xl mx-auto p-4 mt-4">
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                    <p class="text-slate-500 text-sm font-semibold mb-1">ขายแล้ว</p>
-                    <p class="text-3xl font-bold text-blue-600"><span id="stats-count">0</span><span class="text-base text-slate-400">/100</span></p>
+    <nav class="bg-white shadow-sm sticky top-0 z-40 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary text-white p-2 rounded-xl"><i data-feather="monitor" class="w-5 h-5"></i></div>
+                    <h1 class="text-xl font-display text-slate-800 tracking-wide">ระบบจัดการหลังบ้าน</h1>
                 </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                    <p class="text-slate-500 text-sm font-semibold mb-1">ยอดเงินรวม</p>
-                    <p class="text-3xl font-bold text-green-500">฿<span id="stats-money">0</span></p>
+                <div class="flex items-center gap-3">
+                    <a href="index.html" target="_blank" class="text-sm font-bold text-primary bg-pink-50 px-4 py-2 rounded-lg hover:bg-pink-100 transition-colors flex items-center gap-2">
+                        <i data-feather="external-link" class="w-4 h-4"></i> ดูหน้าเว็บลูกค้า
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5">
+                <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                    <i data-feather="dollar-sign" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-500 mb-1">ยอดขายรวมงวดนี้</p>
+                    <h2 class="text-3xl font-extrabold text-slate-800">฿<span id="dash-revenue">0</span></h2>
                 </div>
             </div>
 
-            <h2 class="text-lg font-bold text-slate-700 mb-3 flex items-center gap-2">
-                <i data-feather="list" class="w-5 h-5"></i> รายการจองล่าสุด
-            </h2>
-            <div id="order-list" class="space-y-4">
-                <p class="text-center text-slate-400 py-10">กำลังโหลดข้อมูล...</p>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5">
+                <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <i data-feather="check-circle" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-500 mb-1">ขายแล้ว</p>
+                    <h2 class="text-3xl font-extrabold text-slate-800"><span id="dash-sold">0</span> <span class="text-lg font-medium text-slate-500">ตัว</span></h2>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5">
+                <div class="w-14 h-14 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                    <i data-feather="grid" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-500 mb-1">เลขว่างบนแผง</p>
+                    <h2 class="text-3xl font-extrabold text-slate-800"><span id="dash-available">100</span> <span class="text-lg font-medium text-slate-500">ตัว</span></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-feather="users" class="w-5 h-5 text-primary"></i> รายการสั่งซื้อล่าสุด
+                </h3>
+            </div>
+            
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+                            <th class="px-6 py-4 font-bold">วัน-เวลาที่จอง</th>
+                            <th class="px-6 py-4 font-bold">ชื่อลูกค้า</th>
+                            <th class="px-6 py-4 font-bold">เลขที่เลือก</th>
+                            <th class="px-6 py-4 font-bold">ยอดเงิน</th>
+                            <th class="px-6 py-4 font-bold">วิธีจ่าย</th>
+                            <th class="px-6 py-4 font-bold text-center">หลักฐาน</th>
+                            <th class="px-6 py-4 font-bold text-right">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-table-body" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-slate-400 font-medium">
+                                <i data-feather="loader" class="w-6 h-6 animate-spin mx-auto mb-2"></i> กำลังโหลดข้อมูล...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="slip-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300" id="slip-modal-content">
+            <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i data-feather="image" class="w-4 h-4"></i> หลักฐานการโอนเงิน
+                </h3>
+                <button onclick="closeSlipModal()" class="text-slate-400 hover:text-red-500 transition-colors p-1">
+                    <i data-feather="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-slate-100 flex justify-center items-center min-h-[300px]">
+                <img id="slip-image-full" src="" alt="สลิปโอนเงิน" class="max-w-full max-h-[60vh] object-contain rounded-lg shadow-sm border border-slate-200">
+            </div>
+            <div class="p-4 bg-white">
+                <button onclick="closeSlipModal()" class="w-full py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-colors">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, onValue, remove, runTransaction } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+        // Config Firebase ของคุณ
         const firebaseConfig = {
             apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
+            authDomain: "kanya-paruay.firebaseapp.com",
             databaseURL: "https://kanya-paruay-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "kanya-paruay"
         };
-        const db = getDatabase(initializeApp(firebaseConfig));
 
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // โหลดไอคอน
         feather.replace();
 
-        // 1. ระบบล็อกอิน
-        window.checkPassword = () => {
-            const pass = document.getElementById('admin-pass').value;
-            if(pass === "9999") { // รหัสผ่านแอดมินคือ 9999
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('admin-dashboard').style.display = 'block';
-                loadData();
-            } else {
-                alert("รหัสผ่านไม่ถูกต้อง!");
-            }
-        };
+        let globalBookings = {};
+        let globalSoldNumbers = [];
 
-        // โหลดข้อมูลออเดอร์
-        function loadData() {
-            onValue(ref(db, 'customer_bookings'), (snapshot) => {
-                const orders = snapshot.val();
-                const listEl = document.getElementById('order-list');
-                let totalMoney = 0;
-                
-                if (!orders) {
-                    listEl.innerHTML = '<p class="text-center text-slate-400 py-10 bg-white rounded-2xl">ยังไม่มีคนจองเลยจ้า</p>';
-                    document.getElementById('stats-money').innerText = "0";
-                    return;
-                }
-
-                listEl.innerHTML = '';
-                // แปลงข้อมูลเป็น Array แล้วเรียงจากใหม่ไปเก่า
-                const ordersArray = Object.entries(orders).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.timestamp - a.timestamp);
-
-                ordersArray.forEach(order => {
-                    totalMoney += order.totalPrice;
-                    
-                    const payStatus = order.paymentMethod === 'pay_now' 
-                        ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">โอนเลย</span>`
-                        : `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">จ่ายทีหลัง</span>`;
-
-                    const card = document.createElement('div');
-                    card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative";
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="font-bold text-lg text-slate-800">${order.customerName}</h3>
-                                <p class="text-xs text-slate-400">${order.purchaseDate}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-primary text-lg">฿${order.totalPrice}</p>
-                                ${payStatus}
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-500 mb-1">เลขที่จอง:</p>
-                            <div class="flex flex-wrap gap-1">
-                                ${order.selectedNumbers.map(n => `<span class="bg-pink-50 border border-pink-100 text-pink-600 px-2 py-0.5 rounded-md text-sm font-bold">${n}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="border-t border-slate-100 pt-3 flex justify-end">
-                            <button onclick="cancelOrder('${order.id}', '${order.selectedNumbers.join(',')}')" class="text-red-500 bg-red-50 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-100 transition-colors">
-                                <i data-feather="trash-2" class="w-4 h-4"></i> ยกเลิก (คืนเลข)
-                            </button>
-                        </div>
-                    `;
-                    listEl.appendChild(card);
-                });
-                
-                document.getElementById('stats-money').innerText = totalMoney.toLocaleString();
-                feather.replace();
-            });
-
-            // อัปเดตจำนวนเลขที่ขายไป
-            onValue(ref(db, 'sold_out_numbers'), (snapshot) => {
-                const sold = snapshot.val() || [];
-                document.getElementById('stats-count').innerText = sold.length;
-            });
+        // ฟังชันก์เปิดปิด Modal รูปสลิป
+        window.openSlipModal = function(url) {
+            if(!url || url === 'ไม่ได้แนบสลิป') return;
+            const modal = document.getElementById('slip-modal');
+            const content = document.getElementById('slip-modal-content');
+            document.getElementById('slip-image-full').src = url;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.replace('scale-95', 'scale-100');
+            }, 10);
         }
 
-        // ระบบลบล้างกระดานทั้งหมด
-        window.resetBoard = async () => {
-            if(confirm("⚠️ คำเตือน: ยืนยันล้างกระดานงวดใหม่ใช่ไหม? ข้อมูลการจองและยอดเงินทั้งหมดจะหายไปทันที!")) {
-                await set(ref(db, 'sold_out_numbers'), []);
-                await set(ref(db, 'customer_bookings'), []);
-                alert("ล้างกระดานเรียบร้อย พร้อมเปิดรับยอดรอบใหม่จ้า!");
-            }
-        };
+        window.closeSlipModal = function() {
+            const modal = document.getElementById('slip-modal');
+            const content = document.getElementById('slip-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('slip-image-full').src = "";
+            }, 300);
+        }
 
-        // ระบบยกเลิกออเดอร์รายคน (ลบชื่อและคืนเลขลงกระดาน)
-        window.cancelOrder = async (orderId, numbersStr) => {
-            if(confirm("แน่ใจนะว่าจะยกเลิกออเดอร์นี้? (เลขที่ลูกค้าเลือกจะถูกคืนกลับไปให้คนอื่นจองได้)")) {
-                const numbersToReturn = numbersStr.split(',');
-                
-                // 1. ลบออเดอร์จาก customer_bookings
-                await remove(ref(db, `customer_bookings/${orderId}`));
-                
-                // 2. ดึงเลขที่ขายแล้วทั้งหมดมา แล้วลบเลขของออเดอร์นี้ออก
-                get(ref(db, 'sold_out_numbers')).then(async (snapshot) => {
-                    let currentSold = snapshot.val() || [];
-                    const newSold = currentSold.filter(num => !numbersToReturn.includes(num));
-                    await set(ref(db, 'sold_out_numbers'), newSold);
-                    alert("ยกเลิกออเดอร์และคืนเลขสำเร็จ!");
-                });
+        // ฟังก์ชันยกเลิกออเดอร์และยึดเลขคืน
+        window.deleteAndReturnNumbers = async function(bookingId, numbersString) {
+            const numbersArr = numbersString.split(',');
+            
+            const isConfirmed = confirm(`⚠️ คำเตือน: คุณต้องการ "ยกเลิก" บิลนี้ใช่หรือไม่?\n\nเลข [ ${numbersString} ] จะถูกลบออกจากบิลนี้ และส่งกลับไปว่างบนแผงหน้าเว็บให้คนอื่นซื้อต่อได้ทันที!`);
+            
+            if (isConfirmed) {
+                try {
+                    // 1. ลบเลขออกจาก sold_out_numbers บน Firebase
+                    await runTransaction(ref(db, 'sold_out_numbers'), (currentSold) => {
+                        if (!currentSold) return [];
+                        // กรองเอาเฉพาะเลขที่ไม่ตรงกับที่ลูกค้ายกเลิก
+                        return currentSold.filter(num => !numbersArr.includes(num));
+                    });
+
+                    // 2. ลบข้อมูลบิลนี้ออกจาก customer_bookings
+                    await remove(ref(db, `customer_bookings/${bookingId}`));
+
+                    alert('✅ ยกเลิกบิล และคืนเลขเข้าแผงสำเร็จแล้ว!');
+                } catch (error) {
+                    console.error("Error deleting:", error);
+                    alert("เกิดข้อผิดพลาดในการยกเลิกบิล กรุณาลองใหม่");
+                }
             }
-        };
+        }
+
+        // ดึงข้อมูลตัวเลขที่ขายไปแล้ว
+        onValue(ref(db, 'sold_out_numbers'), (snapshot) => {
+            globalSoldNumbers = snapshot.val() || [];
+            updateDashboard();
+        });
+
+        // ดึงข้อมูลการจองทั้งหมด
+        onValue(ref(db, 'customer_bookings'), (snapshot) => {
+            globalBookings = snapshot.val() || {};
+            renderTable();
+            updateDashboard();
+        });
+
+        function updateDashboard() {
+            // คำนวณเลขที่ขายและเหลือ
+            const soldCount = globalSoldNumbers.length;
+            const availableCount = 100 - soldCount;
+            
+            document.getElementById('dash-sold').innerText = soldCount;
+            document.getElementById('dash-available').innerText = availableCount;
+
+            // คำนวณรายได้รวม
+            let totalRevenue = 0;
+            Object.values(globalBookings).forEach(booking => {
+                totalRevenue += (booking.totalPrice || 0);
+            });
+            document.getElementById('dash-revenue').innerText = totalRevenue.toLocaleString();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('bookings-table-body');
+            tbody.innerHTML = '';
+
+            // แปลง Object เป็น Array แล้วเรียงลำดับใหม่สุดขึ้นก่อน
+            const bookingsArray = Object.entries(globalBookings).map(([id, data]) => {
+                return { id, ...data };
+            }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            if (bookingsArray.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium bg-slate-50/50">ยังไม่มีรายการสั่งซื้อในระบบ</td></tr>`;
+                return;
+            }
+
+            bookingsArray.forEach(booking => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-pink-50/30 transition-colors group";
+                
+                // จัดการรูปแบบวันที่
+                const dateText = booking.purchaseDate || '-';
+                
+                // จัดการวิธีชำระเงิน
+                let paymentBadge = '';
+                if(booking.paymentMethod === 'pay_now') {
+                    paymentBadge = `<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-xs font-bold border border-green-200"><i data-feather="check-circle" class="w-3 h-3"></i> โอนแล้ว</span>`;
+                } else {
+                    paymentBadge = `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-md text-xs font-bold border border-amber-200"><i data-feather="clock" class="w-3 h-3"></i> จ่ายทีหลัง</span>`;
+                }
+
+                // จัดการปุ่มสลิป
+                let slipBtn = '';
+                if(booking.slipImageUrl && booking.slipImageUrl !== 'ไม่ได้แนบสลิป') {
+                    slipBtn = `<button onclick="openSlipModal('${booking.slipImageUrl}')" class="inline-flex items-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors border border-blue-200 shadow-sm"><i data-feather="image" class="w-4 h-4"></i> ดูรูปสลิป</button>`;
+                } else {
+                    slipBtn = `<span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md">ไม่มีสลิป</span>`;
+                }
+
+                const numbersJoined = booking.selectedNumbers ? booking.selectedNumbers.join(',') : '';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-slate-500">${dateText}</td>
+                    <td class="px-6 py-4 font-bold text-slate-800">${booking.customerName}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1 max-w-[150px]">
+                            ${booking.selectedNumbers ? booking.selectedNumbers.map(n => `<span class="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold px-1.5 py-0.5 rounded">${n}</span>`).join('') : '-'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-extrabold text-primaryDark">฿${(booking.totalPrice || 0).toLocaleString()}</td>
+                    <td class="px-6 py-4">${paymentBadge}</td>
+                    <td class="px-6 py-4 text-center">${slipBtn}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteAndReturnNumbers('${booking.id}', '${numbersJoined}')" class="inline-flex items-center gap-1 text-red-500 hover:text-white bg-red-50 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-bold transition-all border border-red-100 hover:border-red-500 shadow-sm group-hover:opacity-100 md:opacity-50">
+                            <i data-feather="trash-2" class="w-4 h-4"></i> ยึดเลขคืน
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            feather.replace();
+        }
     </script>
 </body>
 </html>
