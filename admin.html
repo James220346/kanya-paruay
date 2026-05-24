@@ -7,6 +7,7 @@
     
     <link rel="icon" type="image/jpeg" href="4676.jpg">
     <link rel="apple-touch-icon" href="4676.jpg">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
@@ -38,15 +39,23 @@
                     <h1 class="text-xl font-display text-slate-800 tracking-wide">ระบบจัดการหลังบ้าน</h1>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="index.html" target="_blank" class="text-sm font-bold text-primary bg-pink-50 px-4 py-2 rounded-lg hover:bg-pink-100 transition-colors flex items-center gap-2">
+                    <button onclick="clearEntireBoard()" class="hidden sm:flex text-sm font-bold text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all items-center gap-2 shadow-sm">
+                        <i data-feather="trash-2" class="w-4 h-4"></i> ล้างกระดาน (เริ่มงวดใหม่)
+                    </button>
+                    <a href="index.html" target="_blank" class="text-sm font-bold text-primary bg-pink-50 border border-pink-200 px-4 py-2 rounded-lg hover:bg-pink-100 transition-colors flex items-center gap-2 shadow-sm">
                         <i data-feather="external-link" class="w-4 h-4"></i> ดูหน้าเว็บลูกค้า
                     </a>
                 </div>
             </div>
+            <div class="sm:hidden pb-3">
+                 <button onclick="clearEntireBoard()" class="w-full text-sm font-bold text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all flex justify-center items-center gap-2 shadow-sm">
+                    <i data-feather="trash-2" class="w-4 h-4"></i> ล้างกระดานทั้งหมด (เริ่มงวดใหม่)
+                </button>
+            </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5">
@@ -91,13 +100,13 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
-                            <th class="px-6 py-4 font-bold">วัน-เวลาที่จอง</th>
-                            <th class="px-6 py-4 font-bold">ชื่อลูกค้า</th>
-                            <th class="px-6 py-4 font-bold">เลขที่เลือก</th>
-                            <th class="px-6 py-4 font-bold">ยอดเงิน</th>
-                            <th class="px-6 py-4 font-bold">วิธีจ่าย</th>
-                            <th class="px-6 py-4 font-bold text-center">หลักฐาน</th>
-                            <th class="px-6 py-4 font-bold text-right">จัดการ</th>
+                            <th class="px-6 py-4 font-bold min-w-[140px]">วัน-เวลาที่จอง</th>
+                            <th class="px-6 py-4 font-bold min-w-[150px]">ชื่อลูกค้า</th>
+                            <th class="px-6 py-4 font-bold min-w-[150px]">เลขที่เลือก</th>
+                            <th class="px-6 py-4 font-bold min-w-[100px]">ยอดเงิน</th>
+                            <th class="px-6 py-4 font-bold min-w-[120px]">วิธีจ่าย</th>
+                            <th class="px-6 py-4 font-bold text-center min-w-[120px]">หลักฐาน</th>
+                            <th class="px-6 py-4 font-bold text-right min-w-[120px]">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="bookings-table-body" class="divide-y divide-slate-100">
@@ -133,9 +142,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, onValue, remove, runTransaction } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, onValue, remove, runTransaction, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // Config Firebase ของคุณ
+        // Config Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
             authDomain: "kanya-paruay.firebaseapp.com",
@@ -188,7 +197,6 @@
                     // 1. ลบเลขออกจาก sold_out_numbers บน Firebase
                     await runTransaction(ref(db, 'sold_out_numbers'), (currentSold) => {
                         if (!currentSold) return [];
-                        // กรองเอาเฉพาะเลขที่ไม่ตรงกับที่ลูกค้ายกเลิก
                         return currentSold.filter(num => !numbersArr.includes(num));
                     });
 
@@ -199,6 +207,34 @@
                 } catch (error) {
                     console.error("Error deleting:", error);
                     alert("เกิดข้อผิดพลาดในการยกเลิกบิล กรุณาลองใหม่");
+                }
+            }
+        }
+
+        // ฟังก์ชันล้างกระดานทั้งหมด (Manual Reset)
+        window.clearEntireBoard = async function() {
+            const confirm1 = confirm("⚠️ คำเตือนระดับสูงสุด: คุณกำลังจะล้างกระดานทั้งหมด!\n\nข้อมูลการขาย รูปสลิป และเลขที่ถูกจองทั้งหมดของงวดนี้จะถูกลบเกลี้ยง และไม่สามารถกู้คืนได้\n\nแน่ใจหรือไม่ว่าต้องการล้างกระดาน?");
+            
+            if (confirm1) {
+                // ด่านที่ 2 ให้พิมพ์ยืนยันเพื่อป้องกันมือลั่น
+                const confirm2 = prompt("เพื่อยืนยันการล้างกระดาน กรุณาพิมพ์คำว่า 'ยืนยัน' ลงในช่องด้านล่าง");
+                
+                if (confirm2 === "ยืนยัน") {
+                    try {
+                        // เคลียร์ข้อมูลใน Firebase ให้เป็นค่าว่าง
+                        await set(ref(db, 'sold_out_numbers'), []);
+                        await set(ref(db, 'customer_bookings'), []);
+                        
+                        // รีเซ็ตวันที่ในเครื่องด้วย เพื่อให้ระบบออโต้รีเซ็ตยังทำงานได้ปกติในรอบถัดไป
+                        localStorage.setItem('lastResetDate', new Date().toDateString());
+                        
+                        alert("✅ ล้างกระดานและลบข้อมูลทั้งหมดเรียบร้อยแล้ว! พร้อมเริ่มงวดใหม่จ้า");
+                    } catch (error) {
+                        console.error("Error clearing board:", error);
+                        alert("เกิดข้อผิดพลาดในการล้างกระดาน กรุณาลองใหม่อีกครั้ง");
+                    }
+                } else if (confirm2 !== null) {
+                    alert("❌ ยกเลิกการล้างกระดาน (พิมพ์คำยืนยันไม่ถูกต้อง)");
                 }
             }
         }
@@ -284,7 +320,7 @@
                     <td class="px-6 py-4 text-center">${slipBtn}</td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="deleteAndReturnNumbers('${booking.id}', '${numbersJoined}')" class="inline-flex items-center gap-1 text-red-500 hover:text-white bg-red-50 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-bold transition-all border border-red-100 hover:border-red-500 shadow-sm group-hover:opacity-100 md:opacity-50">
-                            <i data-feather="trash-2" class="w-4 h-4"></i> ยึดเลขคืน
+                            <i data-feather="trash-2" class="w-4 h-4"></i> ยึดคืน
                         </button>
                     </td>
                 `;
