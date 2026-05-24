@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เบอร์หวยกัญญา - ระบบจองตัวเลข</title>
-    
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="หวยกัญญา">
@@ -12,9 +12,9 @@
     <meta name="theme-color" content="#EC4899">
     
     <link rel="apple-touch-icon" href="4676.jpg">
-    
+    <link rel="icon" type="image/jpeg" href="4676.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💖</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -98,8 +98,8 @@
             <div class="flex-1 bg-white/80 backdrop-blur-sm p-4 md:p-6 rounded-3xl shadow-lg border border-pink-100">
                 <div class="flex justify-between items-end mb-6">
                     <div>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ ถูก2ตัวบนรับ 500 บาท</h2>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ ถูก2ตัวล่างรับ 3500 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก2ตัวบนรับ 500 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก2ตัวล่างรับ 3500 บาท</h2>
                         <p class="text-sm text-slate-500">จิ้มเลือกเลขที่ชอบได้เลยจ้า</p>
                     </div>
                     <div class="hidden sm:flex items-center gap-4 text-sm font-semibold text-slate-600 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
@@ -121,7 +121,7 @@
             <div class="w-full lg:w-[420px] flex flex-col gap-4">
                 <div class="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-pink-100 sticky top-28">
                     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-pink-50 pb-3">
-                        <i data-feather="shopping-bag" class="w-5 h-5 text-primary"></i> ตะกร้า
+                        <i data-feather="shopping-bag" class="w-5 h-5 text-primary"></i> ตะกร้าพารวย
                     </h2>
 
                     <div id="selected-list" class="min-h-[80px] flex flex-wrap gap-2 mb-5 p-4 bg-pink-50/50 rounded-2xl border border-pink-100 items-start content-start transition-all">
@@ -177,8 +177,15 @@
                                 
                                 <div id="qr-section" class="bg-white p-4 rounded-xl shadow-sm border border-blue-100 mb-3 flex flex-col items-center justify-center hidden transition-all">
                                     <p class="text-sm font-bold text-primary mb-2">สแกนจ่ายผ่านพร้อมเพย์</p>
-                                    <img id="promptpay-qr" src="" alt="QR Code" class="w-40 h-40 object-contain shadow-sm rounded-lg border-2 border-pink-100 p-1">
-                                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><i data-feather="check-circle" class="w-3 h-3 text-green-500"></i> สแกนปุ๊บ ยอดตรงเป๊ะ!</p>
+                                    
+                                    <div class="relative bg-white p-2 rounded-xl border-2 border-pink-100 shadow-sm mb-3">
+                                        <img id="promptpay-qr" src="" alt="QR Code" class="w-40 h-40 object-contain">
+                                    </div>
+                                    
+                                    <button type="button" onclick="downloadQR()" class="flex items-center justify-center gap-1.5 w-full bg-[#0084FF] text-white hover:bg-blue-600 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm mb-1">
+                                        <i data-feather="download" class="w-4 h-4"></i> บันทึกรูป QR ลงเครื่อง
+                                    </button>
+                                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-1"><i data-feather="check-circle" class="w-3 h-3 text-green-500"></i> โหลดแล้วเปิดแอปธนาคารสแกนได้เลย!</p>
                                 </div>
 
                                 <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-blue-100">
@@ -253,14 +260,14 @@
     </div>
 
     <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full font-medium text-sm transition-opacity duration-300 opacity-0 pointer-events-none z-[200]">
-        คัดลอกเลขบัญชีแล้ว!
+        ทำรายการสำเร็จ!
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue, runTransaction, set, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // ระบบกำเนิดคลื่นเสียงวิทยาศาสตร์แบบไม่ต้องโหลดไฟล์ (แก้ปัญหามือถือบล็อกเสียงชัวร์ 100%)
+        // ระบบกำเนิดคลื่นเสียงวิทยาศาสตร์แบบไม่ต้องโหลดไฟล์
         let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) {
@@ -272,16 +279,15 @@
             return audioCtx;
         }
 
-        // เล่นเสียงป๊อก (เมื่อกดเลข)
         function playClickSound() {
             try {
                 const ctx = getAudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, ctx.currentTime); // ความถี่เสียงป๊อก น่ารักๆ
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
                 gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1); // เสียงสั้นๆ 0.1 วินาที
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
@@ -289,18 +295,16 @@
             } catch (e) { console.log("Audio error:", e); }
         }
 
-        // เล่นเสียงวิ้งงง สำเร็จ (เมื่อซื้อเสร็จ)
         function playSuccessSound() {
             try {
                 const ctx = getAudioContext();
                 const now = ctx.currentTime;
-                // สร้างเสียงคอร์ดประสานงาน 3 ตัวโน้ตพร้อมกันเพื่อให้เสียงหรูหรา
-                const freqs = [523.25, 659.25, 783.99, 1046.50]; // คอร์ด C Major ใสๆ ลื่นหู
+                const freqs = [523.25, 659.25, 783.99, 1046.50]; 
                 freqs.forEach((f, i) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(f, now + (i * 0.05)); // เล่นเยื้องกันนิดๆ ให้เกิดมิติเสียงวิ้งๆ
+                    osc.frequency.setValueAtTime(f, now + (i * 0.05));
                     gain.gain.setValueAtTime(0.2, now + (i * 0.05));
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
                     osc.connect(gain);
@@ -433,7 +437,6 @@
         };
 
         window.toggleNumber = function(numStr, btnElement) {
-            // เรียกใช้งานเล่นเสียงป๊อก (คลื่นเสียงสังเคราะห์สด)
             playClickSound();
 
             const index = selectedNumbers.indexOf(numStr);
@@ -493,6 +496,35 @@
             
             if(totalCountEl) totalCountEl.innerText = count; 
             if(totalPriceEl) totalPriceEl.innerText = total.toLocaleString();
+        };
+
+        // ฟังก์ชันโหลด QR Code ลงเครื่อง
+        window.downloadQR = async function() {
+            const qrImage = document.getElementById('promptpay-qr');
+            if(!qrImage || !qrImage.src) return;
+            
+            try {
+                // ดึงรูปภาพมาแปลงเป็นข้อมูลเพื่อให้เบราว์เซอร์เซฟได้โดยตรง
+                const response = await fetch(qrImage.src);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'QR_หวยกัญญา.png'; // ตั้งชื่อไฟล์ที่โหลด
+                
+                document.body.appendChild(a);
+                a.click(); // สั่งให้ดาวน์โหลดอัตโนมัติ
+                
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                showToast('บันทึกคิวอาร์โค้ดลงเครื่องแล้วจ้า!');
+            } catch (error) {
+                // เผื่อมือถือบางรุ่นมีระบบป้องกัน ก็จะเด้งเปิดรูปขึ้นมาให้ลูกค้ากดค้างแล้วเซฟแทนครับ
+                window.open(qrImage.src, '_blank');
+            }
         };
 
         const priceInput = document.getElementById('price-per-num');
@@ -571,7 +603,6 @@
                             const modalTitle = document.getElementById('modal-title');
                             const modalDesc = document.getElementById('modal-desc');
 
-                            // เรียกใช้งานเล่นเสียงวิ้งงง คอร์ดใสๆ ยืนยันทำรายการสำเร็จ
                             playSuccessSound();
 
                             if (paymentType === 'pay_now') {
@@ -650,15 +681,19 @@
         window.copyAccount = function() {
             const accEl = document.getElementById('bank-acc'); if(!accEl) return;
             const acc = accEl.innerText.replace(/-/g, '');
-            navigator.clipboard.writeText(acc).then(() => { showToast(); }).catch(err => {
+            navigator.clipboard.writeText(acc).then(() => { showToast('คัดลอกเลขบัญชีแล้ว!'); }).catch(err => {
                 const textArea = document.createElement("textarea"); textArea.value = acc; document.body.appendChild(textArea);
-                textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); showToast();
+                textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); showToast('คัดลอกเลขบัญชีแล้ว!');
             });
         };
         
-        function showToast() { 
+        function showToast(message) { 
             const toast = document.getElementById('toast'); 
-            if(toast) { toast.classList.remove('opacity-0'); setTimeout(() => toast.classList.add('opacity-0'), 2000); } 
+            if(toast) { 
+                toast.innerText = message;
+                toast.classList.remove('opacity-0'); 
+                setTimeout(() => toast.classList.add('opacity-0'), 2000); 
+            } 
         }
 
         window.closeModal = function() {
