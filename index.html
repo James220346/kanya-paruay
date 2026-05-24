@@ -100,8 +100,8 @@
             <div id="board-capture-area" class="flex-1 bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-pink-100 relative">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ ถูก2ตัวบนรับ 500 บาท</h2>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ ถูก2ตัวล่าง 3000 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">💸ถูก2ตัวบนรับ 500 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">💸ถูก2ตัวล่างรับ 3000 บาท</h2>
                         <p class="text-sm text-slate-500">แคปรูปหรือจิ้มเลือกเลขที่ชอบได้เลยจ้า</p>
                     </div>
                     
@@ -287,6 +287,26 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue, runTransaction, set, push, get, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+        // ==========================================
+        // ตั้งค่า Firebase - โปรดตรวจสอบให้ตรงกับของคุณ
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
+            authDomain: "kanya-paruay.firebaseapp.com",
+            databaseURL: "https://kanya-paruay-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kanya-paruay",
+            storageBucket: "kanya-paruay.firebasestorage.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const numbersRef = ref(db, 'sold_out_numbers');
+
+        const IMGBB_API_KEY = "6d2a41cec565aa2179c542cdf1b05758";
+        const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
+        const TELEGRAM_CHAT_ID = "8151328238";
+        const PROMPTPAY_ID = "0990322414"; 
+
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 const savedName = localStorage.getItem('kanya_buyer_name');
@@ -294,6 +314,9 @@
             } catch(e) {}
         });
 
+        // ==========================================
+        // ระบบเสียงประกอบ
+        // ==========================================
         let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -331,23 +354,9 @@
             } catch (e) { }
         }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBF6WyNU-Pn8z538iy7fuWkuUyizKoP_4",
-            authDomain: "kanya-paruay.firebaseapp.com",
-            databaseURL: "https://kanya-paruay-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "kanya-paruay",
-            storageBucket: "kanya-paruay.firebasestorage.app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const numbersRef = ref(db, 'sold_out_numbers');
-
-        const IMGBB_API_KEY = "6d2a41cec565aa2179c542cdf1b05758";
-        const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
-        const TELEGRAM_CHAT_ID = "8151328238";
-        const PROMPTPAY_ID = "0990322414"; 
-
+        // ==========================================
+        // ระบบ API ภายนอก
+        // ==========================================
         async function uploadSlip(file) {
             const formData = new FormData(); formData.append('image', file);
             const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
@@ -379,31 +388,12 @@
         };
         checkAutoReset();
 
-        function createFallingBackground() {
-            const container = document.createElement('div');
-            container.className = 'fixed inset-0 pointer-events-none z-[-1] overflow-hidden';
-            document.body.prepend(container);
-            // Default items (will be overridden by theme later)
-            const items = ['💖', '✨', '🌸', '💕'];
-            for (let i = 0; i < 25; i++) {
-                const el = document.createElement('div');
-                el.innerText = items[Math.floor(Math.random() * items.length)];
-                el.className = 'falling-item opacity-40 md:opacity-60'; 
-                el.style.left = `${Math.random() * 100}vw`;
-                el.style.fontSize = `${Math.random() * 1.5 + 0.8}rem`;
-                el.style.animationDuration = `${Math.random() * 6 + 6}s, ${Math.random() * 3 + 2}s`;
-                el.style.animationDelay = `${Math.random() * 10}s, ${Math.random() * 10}s`;
-                container.appendChild(el);
-            }
-        }
-        createFallingBackground();
-
         // ==========================================
-        // ระบบจัดการธีมร้านค้า (Dynamic Theme System)
+        // ระบบเปลี่ยนธีมร้านค้าแบบ Dynamic
         // ==========================================
         const themeStyles = {
             pink: {
-                css: ``, // ใช้สีเริ่มต้นของ Tailwind
+                css: ``, 
                 icon: '𓆩♡𓆪',
                 falling: ['💖', '✨', '🌸', '💕']
             },
@@ -422,7 +412,7 @@
                     .text-pink-600 { color: #D97706 !important; }
                     body { background-color: #FFFBEB !important; background-image: radial-gradient(#FDE68A 1px, transparent 1px) !important; }
                 `,
-                icon: '💰',
+                icon: '𓆩♡𓆪',
                 falling: ['💰', '🪙', '✨', '💸']
             },
             green: {
@@ -440,7 +430,7 @@
                     .text-pink-600 { color: #059669 !important; }
                     body { background-color: #ECFDF5 !important; background-image: radial-gradient(#A7F3D0 1px, transparent 1px) !important; }
                 `,
-                icon: '🍀',
+                icon: '𓆩♡𓆪',
                 falling: ['🍀', '💵', '✨', '💚']
             }
         };
@@ -448,18 +438,14 @@
         const styleTag = document.createElement('style');
         document.head.appendChild(styleTag);
 
-        // รอรับคำสั่งเปลี่ยนธีมจาก Firebase
         onValue(ref(db, 'app_settings/current_theme'), (snapshot) => {
             const currentTheme = snapshot.val() || 'pink';
             const themeConfig = themeStyles[currentTheme];
             
             if (themeConfig) {
                 styleTag.innerHTML = themeConfig.css;
-                
                 const mainIcon = document.getElementById('main-theme-icon');
-                if (mainIcon) {
-                    mainIcon.innerText = themeConfig.icon;
-                }
+                if (mainIcon) mainIcon.innerText = themeConfig.icon;
 
                 const fallingItems = document.querySelectorAll('.falling-item');
                 fallingItems.forEach(item => {
@@ -467,7 +453,24 @@
                 });
             }
         });
-        // ==========================================
+
+        function createFallingBackground() {
+            const container = document.createElement('div');
+            container.className = 'fixed inset-0 pointer-events-none z-[-1] overflow-hidden';
+            document.body.prepend(container);
+            const items = ['💖', '✨', '🌸', '💕'];
+            for (let i = 0; i < 25; i++) {
+                const el = document.createElement('div');
+                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.className = 'falling-item opacity-40 md:opacity-60'; 
+                el.style.left = `${Math.random() * 100}vw`;
+                el.style.fontSize = `${Math.random() * 1.5 + 0.8}rem`;
+                el.style.animationDuration = `${Math.random() * 6 + 6}s, ${Math.random() * 3 + 2}s`;
+                el.style.animationDelay = `${Math.random() * 10}s, ${Math.random() * 10}s`;
+                container.appendChild(el);
+            }
+        }
+        createFallingBackground();
 
         function calculateNextDrawDate() {
             const now = new Date();
@@ -575,24 +578,42 @@
             if(totalPriceEl) totalPriceEl.innerText = total.toLocaleString();
         };
 
+        // ==========================================
+        // ระบบแคปหน้าจอจัดเรียง 10 คอลัมน์ (อัปเดตแล้ว)
+        // ==========================================
         window.captureBoard = async function() {
             const boardElement = document.getElementById('board-capture-area');
             if(!boardElement) return;
             
-            showToast('กำลังปรับขนาดรูปแผง...');
+            showToast('กำลังจัดรูปแผง 10 คอลัมน์ กรุณารอสักครู่...');
             
             try {
                 const canvas = await html2canvas(boardElement, { 
                     scale: 2, 
                     backgroundColor: '#ffffff', 
-                    borderRadius: 24, 
                     useCORS: true,
-                    windowWidth: document.documentElement.offsetWidth,
-                    windowHeight: document.documentElement.offsetHeight,
-                    x: boardElement.offsetLeft,
-                    y: boardElement.offsetTop,
-                    width: boardElement.offsetWidth,
-                    height: boardElement.offsetHeight
+                    // ฟังก์ชัน onclone จะทำงานเฉพาะใน "รูปที่จะเซฟ" โดยไม่กระทบหน้าเว็บจริง
+                    onclone: (clonedDoc) => {
+                        const clonedBoard = clonedDoc.getElementById('board-capture-area');
+                        const clonedGrid = clonedDoc.getElementById('number-grid');
+                        
+                        // บังคับขยายความกว้างของแผงให้เท่าหน้าจอคอม (800px)
+                        clonedBoard.style.width = '800px';
+                        clonedBoard.style.maxWidth = 'none';
+                        clonedBoard.style.padding = '32px';
+                        clonedBoard.style.margin = '0';
+                        
+                        // บังคับตารางให้เป็น 10 คอลัมน์แบบเด็ดขาด
+                        if (clonedGrid) {
+                            clonedGrid.style.display = 'grid';
+                            clonedGrid.style.gridTemplateColumns = 'repeat(10, 1fr)';
+                            clonedGrid.style.gap = '12px';
+                        }
+                        
+                        // ซ่อนปุ่มกล้องถ่ายรูปไม่ให้ติดไปในรูป
+                        const captureBtn = clonedBoard.querySelector('button');
+                        if (captureBtn) captureBtn.style.display = 'none';
+                    }
                 });
                 
                 const url = canvas.toDataURL('image/jpeg', 0.9);
@@ -608,7 +629,7 @@
                 showToast('โหลดรูปแผงสำเร็จแล้วจ้า!');
             } catch (error) {
                 console.error("Capture failed:", error);
-                alert("โหลดรูปไม่สำเร็จ ลองแคปหน้าจอด้วยมือถือแทนนะคะ");
+                alert("โหลดรูปไม่สำเร็จ รบกวนแคปหน้าจอแทนก่อนนะคะ");
             }
         };
 
@@ -634,6 +655,9 @@
             else { preview.src = ""; preview.classList.add('hidden'); }
         };
 
+        // ==========================================
+        // ระบบ Modal ถามรวมบิล
+        // ==========================================
         window.showMergeModal = function(customerName) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('merge-modal');
@@ -666,6 +690,9 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         };
 
+        // ==========================================
+        // ระบบส่งข้อมูลการจอง (Submit)
+        // ==========================================
         const bookingForm = document.getElementById('booking-form');
         if(bookingForm) {
             bookingForm.addEventListener('submit', async function(e) {
