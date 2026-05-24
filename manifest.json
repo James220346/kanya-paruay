@@ -1,0 +1,20 @@
+{
+  "name": "เบอร์หวยกัญญา",
+  "short_name": "หวยกัญญา",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf2f8",
+  "theme_color": "#EC4899",
+  "icons": [
+    {
+      "src": "4676.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "4676.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
