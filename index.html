@@ -100,8 +100,8 @@
             <div id="board-capture-area" class="flex-1 bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-pink-100 relative">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">💸ถูก2ตัวบนรับ 500 บาท</h2>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">💸ถูก2ตัวล่างรับ 3000 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก2ตัวบนรับ 500 บาท</h2>
+                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก2ตัวล่างรับ 3000 บาท</h2>
                         <p class="text-sm text-slate-500">แคปรูปหรือจิ้มเลือกเลขที่ชอบได้เลยจ้า</p>
                     </div>
                     
@@ -306,13 +306,6 @@
         const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
         const TELEGRAM_CHAT_ID = "8151328238";
         const PROMPTPAY_ID = "0990322414"; 
-
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const savedName = localStorage.getItem('kanya_buyer_name');
-                if (savedName) document.getElementById('buyer-name').value = savedName;
-            } catch(e) {}
-        });
 
         // ==========================================
         // ระบบเสียงประกอบ
@@ -713,8 +706,6 @@
                     return;
                 }
 
-                try { localStorage.setItem('kanya_buyer_name', name); } catch(e) {}
-
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="animate-spin" data-feather="loader"></i> กำลังตรวจสอบบิลเดิม...';
                 try { feather.replace(); } catch(e){}
@@ -912,21 +903,34 @@
             } 
         }
 
+        // ==========================================
+        // ระบบปิดหน้าต่าง พร้อมคำสั่งเคลียร์ช่องชื่อลูกค้า
+        // ==========================================
         window.closeModal = function() {
             const modal = document.getElementById('success-modal');
             const modalContent = document.getElementById('modal-content');
             if(modal) modal.classList.add('opacity-0'); 
             if(modalContent) { modalContent.classList.replace('scale-100', 'scale-90'); }
+            
             setTimeout(() => {
                 if(modal) modal.classList.add('hidden');
+                
                 selectedNumbers = [];
                 document.getElementById('price-per-num').value = '50';
+                
+                // ✅ คำสั่งล้างช่องชื่อลูกค้าให้กลับมาเป็นค่าว่างทุกครั้งเมื่อปิดบิลสำเร็จ
+                const buyerNameInput = document.getElementById('buyer-name');
+                if (buyerNameInput) buyerNameInput.value = '';
+                
                 const defaultRadio = document.querySelector('input[name="payment_type"][value="pay_now"]');
                 if(defaultRadio) { defaultRadio.checked = true; window.togglePayment(defaultRadio); }
+                
                 document.getElementById('slip-preview').classList.add('hidden');
                 document.getElementById('slip-preview').src = "";
                 if(document.getElementById('slip-file')) document.getElementById('slip-file').value = "";
-                window.renderGrid(); window.updateCart();
+                
+                window.renderGrid(); 
+                window.updateCart();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 300);
         };
