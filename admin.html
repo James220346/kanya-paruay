@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหลังบ้าน | หวยกัญญา</title>
+    <title>ระบบหลังบ้าน | จัดการแผงหวย</title>
     
     <link rel="icon" type="image/jpeg" href="4676.jpg">
     
@@ -57,7 +57,7 @@
         <div class="shape shape-3"></div>
     </div>
 
-    <header class="pt-8 pb-6">
+    <header class="pt-8 pb-4">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             
             <div class="flex items-center gap-4 group cursor-pointer">
@@ -69,7 +69,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primaryDark to-purple-600 tracking-tight drop-shadow-sm">ระบบหลังบ้าน</h1>
-                    <p class="text-sm text-indigo-500 font-bold">ศูนย์ควบคุมแผงตัวเลข</p>
+                    <p id="panel-title-text" class="text-sm text-indigo-500 font-bold">ศูนย์ควบคุมแผงที่ 1 (กัญญา)</p>
                 </div>
             </div>
 
@@ -87,6 +87,17 @@
 
     <div class="max-w-7xl mx-auto px-6 space-y-6">
         
+        <div class="flex justify-center mb-2">
+            <div class="flex bg-white/70 p-1.5 rounded-2xl border border-white backdrop-blur-md shadow-sm w-full md:w-auto">
+                <button id="btn-panel-1" onclick="setPanel(1)" class="flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all bg-gradient-to-r from-pink-400 to-primaryDark text-white shadow-md flex items-center justify-center gap-2">
+                    <i data-feather="heart" class="w-5 h-5"></i> แผงที่ 1 (กัญญา)
+                </button>
+                <button id="btn-panel-2" onclick="setPanel(2)" class="flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all text-slate-500 hover:text-amber-600 hover:bg-white/50 flex items-center justify-center gap-2">
+                    <i data-feather="sun" class="w-5 h-5"></i> แผงที่ 2 (Ptw)
+                </button>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="glass-panel p-6 rounded-[2rem] flex items-center gap-6 group hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-default">
                 <div class="relative w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-500 group-hover:text-white transition-colors overflow-hidden">
@@ -252,14 +263,79 @@
 
         feather.replace({ 'stroke-width': 2.5 });
 
+        // สถานะของแผงปัจจุบัน (1 หรือ 2)
+        let currentPanel = 1;
+
+        // ข้อมูลดิบที่ดึงมาจาก Firebase แยกตามแผง
+        let p1Bookings = {}, p1Sold = [];
+        let p2Bookings = {}, p2Sold = [];
+
+        // ตัวแปรข้อมูลที่ใช้แสดงผลปัจจุบัน
         let globalBookings = {};
         let globalSoldNumbers = [];
         let currentFilter = 'all';
 
-        // ตัวแปรสำหรับเก็บข้อมูลรอดำเนินการของ Modal
         let pendingPaidId = null;
         let pendingDeleteId = null;
         let pendingDeleteNumbers = "";
+
+        // ==========================================
+        // ระบบสลับแผง (Panel Switcher)
+        // ==========================================
+        window.setPanel = function(panelId) {
+            currentPanel = panelId;
+            const b1 = document.getElementById('btn-panel-1');
+            const b2 = document.getElementById('btn-panel-2');
+            const title = document.getElementById('panel-title-text');
+
+            if(panelId === 1) {
+                b1.className = "flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all bg-gradient-to-r from-pink-400 to-primaryDark text-white shadow-md flex items-center justify-center gap-2";
+                b2.className = "flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all text-slate-500 hover:text-amber-600 hover:bg-white/50 flex items-center justify-center gap-2";
+                title.innerText = "ศูนย์ควบคุมแผงที่ 1 (กัญญา)";
+                title.className = "text-sm text-pink-500 font-bold";
+                globalBookings = p1Bookings;
+                globalSoldNumbers = p1Sold;
+            } else {
+                b1.className = "flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all text-slate-500 hover:text-pink-600 hover:bg-white/50 flex items-center justify-center gap-2";
+                b2.className = "flex-1 md:flex-none px-8 py-3 rounded-xl font-bold transition-all bg-gradient-to-r from-amber-400 to-yellow-600 text-white shadow-md flex items-center justify-center gap-2";
+                title.innerText = "ศูนย์ควบคุมแผงที่ 2 (Ptw ทานตะวัน)";
+                title.className = "text-sm text-amber-500 font-bold";
+                globalBookings = p2Bookings;
+                globalSoldNumbers = p2Sold;
+            }
+            renderTable();
+            updateDashboard();
+            feather.replace({ 'stroke-width': 2.5 });
+        }
+
+        // ฟังชันช่วยดึง Path ของฐานข้อมูล
+        const getBooksPath = () => currentPanel === 1 ? 'customer_bookings' : 'customer_bookings_ptw2';
+        const getNumsPath = () => currentPanel === 1 ? 'sold_out_numbers' : 'sold_out_numbers_ptw2';
+
+        // ==========================================
+        // โหลดข้อมูลแผงที่ 1 (กัญญา)
+        // ==========================================
+        onValue(ref(db, 'sold_out_numbers'), (snap) => { 
+            p1Sold = snap.val() || []; 
+            if(currentPanel === 1) { globalSoldNumbers = p1Sold; updateDashboard(); }
+        });
+        onValue(ref(db, 'customer_bookings'), (snap) => { 
+            p1Bookings = snap.val() || {}; 
+            if(currentPanel === 1) { globalBookings = p1Bookings; renderTable(); updateDashboard(); }
+        });
+
+        // ==========================================
+        // โหลดข้อมูลแผงที่ 2 (ทานตะวัน)
+        // ==========================================
+        onValue(ref(db, 'sold_out_numbers_ptw2'), (snap) => { 
+            p2Sold = snap.val() || []; 
+            if(currentPanel === 2) { globalSoldNumbers = p2Sold; updateDashboard(); }
+        });
+        onValue(ref(db, 'customer_bookings_ptw2'), (snap) => { 
+            p2Bookings = snap.val() || {}; 
+            if(currentPanel === 2) { globalBookings = p2Bookings; renderTable(); updateDashboard(); }
+        });
+
 
         window.changeTheme = async function(themeName) {
             try { await set(ref(db, 'app_settings/current_theme'), themeName); } catch (error) {}
@@ -281,7 +357,7 @@
         }
 
         // ==========================================
-        // ระบบแจ้งเตือน (Modal) สำหรับปุ่มรับเงิน
+        // รับเงิน
         // ==========================================
         window.markAsPaid = function(bookingId) {
             pendingPaidId = bookingId;
@@ -308,7 +384,7 @@
             feather.replace();
 
             try {
-                await update(ref(db, `customer_bookings/${pendingPaidId}`), { paymentMethod: 'pay_now' });
+                await update(ref(db, `${getBooksPath()}/${pendingPaidId}`), { paymentMethod: 'pay_now' });
                 window.closePaidModal();
                 setTimeout(() => { btn.innerHTML = originalContent; }, 300);
             } catch (error) {
@@ -318,7 +394,7 @@
         });
 
         // ==========================================
-        // ระบบแจ้งเตือน (Modal) สำหรับปุ่มยึดคืนเลข
+        // ยึดคืนตัวเลข
         // ==========================================
         window.deleteAndReturnNumbers = function(bookingId, numbersString) {
             pendingDeleteId = bookingId;
@@ -349,8 +425,8 @@
 
             try {
                 const numbersArr = pendingDeleteNumbers.split(',');
-                await runTransaction(ref(db, 'sold_out_numbers'), (current) => current ? current.filter(n => !numbersArr.includes(n)) : []);
-                await remove(ref(db, `customer_bookings/${pendingDeleteId}`));
+                await runTransaction(ref(db, getNumsPath()), (current) => current ? current.filter(n => !numbersArr.includes(n)) : []);
+                await remove(ref(db, `${getBooksPath()}/${pendingDeleteId}`));
                 window.closeDeleteModal();
                 setTimeout(() => { btn.innerHTML = originalContent; }, 300);
             } catch (error) {
@@ -360,11 +436,14 @@
         });
 
         // ==========================================
-
+        // ล้างกระดาน (ตามแผงที่เลือก)
+        // ==========================================
         window.clearEntireBoard = async function() {
-            if (confirm("⚠️ ล้างกระดานและบิลทั้งหมด?") && prompt("พิมพ์ 'ยืนยัน' เพื่อดำเนินการ") === "ยืนยัน") {
-                await set(ref(db, 'sold_out_numbers'), []);
-                await set(ref(db, 'customer_bookings'), []);
+            const panelName = currentPanel === 1 ? "แผงที่ 1 (กัญญา)" : "แผงที่ 2 (ทานตะวัน)";
+            if (confirm(`⚠️ ล้างกระดานและบิลทั้งหมดของ [${panelName}]?`) && prompt("พิมพ์ 'ยืนยัน' เพื่อดำเนินการ") === "ยืนยัน") {
+                await set(ref(db, getNumsPath()), []);
+                await set(ref(db, getBooksPath()), []);
+                alert(`ล้างกระดาน ${panelName} เรียบร้อยแล้ว`);
             }
         }
 
@@ -381,9 +460,6 @@
             }
             renderTable();
         }
-
-        onValue(ref(db, 'sold_out_numbers'), (snap) => { globalSoldNumbers = snap.val() || []; updateDashboard(); });
-        onValue(ref(db, 'customer_bookings'), (snap) => { globalBookings = snap.val() || {}; renderTable(); updateDashboard(); });
 
         function updateDashboard() {
             const sold = globalSoldNumbers.length;
