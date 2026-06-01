@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เบอร์หวยกัญญา - ระบบจองตัวเลข</title>
+    <title>แผงจองเลข</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="หวยกัญญา">
+    <meta name="apple-mobile-web-app-title" content="แผงจองเลข">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#EC4899">
+    <meta name="theme-color" content="#0EA5E9">
     
-    <link rel="apple-touch-icon" href="4676.jpg">
-    <link rel="icon" type="image/jpeg" href="4676.jpg">
+    <link rel="apple-touch-icon" href="icon-ptw.jpg">
+    <link rel="icon" type="image/jpeg" href="icon-ptw.jpg">
     <link rel="manifest" href="manifest.json">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,15 +27,21 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Mali', 'sans-serif'], display: ['Chonburi', 'cursive'] },
-                    colors: { primary: '#EC4899', primaryDark: '#BE185D', secondary: '#F59E0B' },
+                    colors: { 
+                        primary: '#0EA5E9',      
+                        primaryDark: '#0369A1',  
+                        secondary: '#10B981'     
+                    },
                     animation: {
                         'float': 'float 3s ease-in-out infinite',
                         'float-delayed': 'float 3s ease-in-out 1.5s infinite',
-                        'color-cycle': 'colorCycle 4s linear infinite',
+                        'shine': 'shine 3s ease-in-out infinite alternate', 
+                        'glow-pulse': 'glowPulse 2.5s ease-in-out infinite alternate',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
-                        colorCycle: { '0%': { filter: 'hue-rotate(0deg)' }, '100%': { filter: 'hue-rotate(360deg)' } }
+                        shine: { '0%': { backgroundPosition: '0% center' }, '100%': { backgroundPosition: '100% center' } },
+                        glowPulse: { '0%': { opacity: '0.4', transform: 'scale(1)' }, '100%': { opacity: '0.9', transform: 'scale(1.2)' } }
                     }
                 }
             }
@@ -47,8 +53,8 @@
         .btn-bounce:hover:not(:disabled) { transform: scale(1.05) translateY(-2px); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         
         body { 
-            background-color: #fdf2f8; 
-            background-image: radial-gradient(#fbcfe8 1px, transparent 1px); 
+            background-color: #F0F9FF; 
+            background-image: radial-gradient(#BAE6FD 1px, transparent 1px); 
             background-size: 20px 20px; 
             overflow-x: hidden; 
         }
@@ -69,27 +75,30 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-10">
 
-    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-100">
+    <nav class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-yellow-200">
         <div class="w-full mx-auto px-4 md:px-8 relative flex flex-col md:flex-row justify-center items-center min-h-[70px]">
             <div class="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 z-10 hidden md:flex items-center gap-2">
-                <div class="inline-flex items-center gap-1.5 text-sm bg-pink-100 text-primaryDark px-3 py-1.5 rounded-full font-semibold border border-pink-200 shadow-sm">
+                <div class="inline-flex items-center gap-1.5 text-sm bg-yellow-100 text-primaryDark px-3 py-1.5 rounded-full font-semibold border border-yellow-300 shadow-sm">
                     <i data-feather="calendar" class="w-4 h-4"></i> รอบ: <span class="draw-date-display">...</span>
                 </div>
-                <div id="clock" class="inline-flex items-center gap-1.5 text-sm bg-white text-primary px-3 py-1.5 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
+                <div id="clock" class="inline-flex items-center gap-1.5 text-sm bg-white text-primary px-3 py-1.5 rounded-full font-bold border border-yellow-300 shadow-sm tracking-wider">00:00:00</div>
             </div>
 
-            <div class="flex items-center justify-center gap-3 group cursor-pointer z-20 py-3 md:py-0">
-                <div class="animate-float drop-shadow-md"><span id="main-theme-icon" class="inline-block text-4xl font-bold text-primary">𓆩♡𓆪</span></div>
-                <div class="animate-float-delayed">
-                    <h1 class="text-3xl md:text-4xl font-display text-transparent bg-clip-text bg-gradient-to-r from-primaryDark to-primary animate-color-cycle py-1 drop-shadow-sm tracking-wider">เบอร์หวยกัญญา</h1>
+            <div class="flex items-center justify-center gap-4 group cursor-pointer z-20 py-3 md:py-0">
+                <div class="relative w-12 h-12 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-yellow-400 rounded-full blur-[12px] animate-glow-pulse"></div>
+                    <span id="main-theme-icon" class="relative z-10 text-4xl font-bold drop-shadow-md">💎</span>
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-display text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 bg-[length:200%_auto] animate-shine py-1 drop-shadow-sm tracking-wider">แผงจองเลข</h1>
                 </div>
             </div>
 
             <div class="w-full flex justify-center items-center gap-2 mt-1 mb-2 md:hidden">
-                <div class="inline-flex items-center gap-1.5 text-xs bg-pink-100 text-primaryDark px-3 py-1 rounded-full font-semibold border border-pink-200 shadow-sm">
+                <div class="inline-flex items-center gap-1.5 text-xs bg-yellow-100 text-primaryDark px-3 py-1 rounded-full font-semibold border border-yellow-300 shadow-sm">
                     <i data-feather="calendar" class="w-3 h-3"></i> <span class="draw-date-display">...</span>
                 </div>
-                <div id="clock-mobile" class="inline-flex items-center gap-1.5 text-xs bg-white text-primary px-3 py-1 rounded-full font-bold border border-pink-200 shadow-sm tracking-wider">00:00:00</div>
+                <div id="clock-mobile" class="inline-flex items-center gap-1.5 text-xs bg-white text-primary px-3 py-1 rounded-full font-bold border border-yellow-300 shadow-sm tracking-wider">00:00:00</div>
             </div>
         </div>
     </nav>
@@ -97,43 +106,43 @@
     <div class="max-w-6xl mx-auto px-4 py-6 mt-2">
         <div class="flex flex-col lg:flex-row gap-6">
             
-            <div id="board-capture-area" class="flex-1 bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-pink-100 relative">
+            <div id="board-capture-area" class="flex-1 bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-yellow-200 relative">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก 2 ตัวบนรับ 500 บาท</h2>
-                        <h2 class="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2">✨ถูก 2 ตัวล่างรับ 3000 บาท</h2>
+                        <h2 class="text-xl font-bold text-yellow-600 mb-1 flex items-center gap-2">✨ถูก 2 ตัวบนรับ 500 บาท</h2>
+                        <h2 class="text-xl font-bold text-yellow-600 mb-1 flex items-center gap-2">✨ถูก 2 ตัวล่างรับ 3000 บาท</h2>
                         <p class="text-sm text-slate-500">แคปรูปหรือจิ้มเลือกเลขที่ชอบได้เลยจ้า</p>
                     </div>
                     
-                    <button type="button" onclick="captureBoard()" data-html2canvas-ignore class="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md">
+                    <button type="button" onclick="captureBoard()" data-html2canvas-ignore class="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md">
                         <i data-feather="camera" class="w-4 h-4"></i> โหลดรูปแผง
                     </button>
                 </div>
 
-                <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-slate-600 mb-6 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm w-fit">
-                    <div class="flex items-center gap-1.5"><div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white border-2 border-pink-200"></div> ว่าง</div>
+                <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-slate-600 mb-6 bg-slate-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm w-fit">
+                    <div class="flex items-center gap-1.5"><div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white border-2 border-yellow-300"></div> ว่าง</div>
                     <div class="flex items-center gap-1.5"><div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-primary shadow-sm shadow-primary/40"></div> เลือกแล้ว</div>
-                    <div class="flex items-center gap-1.5 text-blue-500 text-base sm:text-lg">💙 <span class="text-xs sm:text-sm text-slate-600 ml-0.5 sm:ml-1">:ซื้อแล้ว</span></div>
+                    <div class="flex items-center gap-1.5 text-yellow-600 text-base sm:text-lg"><span class="status-icon">💎</span> <span class="text-xs sm:text-sm text-slate-600 ml-0.5 sm:ml-1">:ขายแล้ว</span></div>
                 </div>
 
                 <div id="number-grid" class="grid grid-cols-5 sm:grid-cols-10 gap-2 md:gap-3"></div>
             </div>
 
             <div class="w-full lg:w-[420px] flex flex-col gap-4">
-                <div class="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-pink-100 sticky top-28">
-                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-pink-50 pb-3">
+                <div class="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-yellow-200 sticky top-28">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-yellow-100 pb-3">
                         <i data-feather="shopping-bag" class="w-5 h-5 text-primary"></i> ตะกร้า
                     </h2>
 
-                    <div id="selected-list" class="min-h-[80px] flex flex-wrap gap-2 mb-5 p-4 bg-pink-50/50 rounded-2xl border border-pink-100 items-start content-start transition-all">
-                        <p class="text-pink-400 text-sm w-full text-center py-3" id="empty-msg">ยังไม่ได้จิ้มเลขเลยน้าา ~</p>
+                    <div id="selected-list" class="min-h-[80px] flex flex-wrap gap-2 mb-5 p-4 bg-yellow-50/50 rounded-2xl border border-yellow-200 items-start content-start transition-all">
+                        <p class="text-yellow-600 text-sm w-full text-center py-3" id="empty-msg">ยังไม่ได้จิ้มเลขเลยน้าา ~</p>
                     </div>
 
                     <form id="booking-form" class="space-y-5">
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">วิธีการชำระเงิน</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="relative flex items-center justify-center gap-2 p-3 border-2 border-pink-300 bg-pink-50 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors payment-option group shadow-sm">
+                                <label class="relative flex items-center justify-center gap-2 p-3 border-2 border-yellow-400 bg-yellow-50 rounded-xl cursor-pointer hover:bg-yellow-100 transition-colors payment-option group shadow-sm">
                                     <input type="radio" name="payment_type" value="pay_now" class="hidden" checked onchange="togglePayment(this)">
                                     <i data-feather="image" class="w-4 h-4 text-primary payment-icon"></i>
                                     <span class="font-bold text-sm text-primaryDark payment-text">โอนเลย</span>
@@ -148,18 +157,18 @@
 
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1.5 ml-1">ชื่อคนดวงดี</label>
-                            <input type="text" id="buyer-name" required class="w-full px-4 py-3 bg-white border-2 border-pink-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-medium text-slate-700 placeholder-slate-300" placeholder="ใส่ชื่อเล่นหรือชื่อจริงได้เลยจ้า">
+                            <input type="text" id="buyer-name" required class="w-full px-4 py-3 bg-white border-2 border-yellow-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-medium text-slate-700 placeholder-slate-300" placeholder="ใส่ชื่อเล่นหรือชื่อจริงได้เลยจ้า">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1.5 ml-1">เลขละ 50 (บาท)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold text-lg">฿</span>
-                                <input type="number" id="price-per-num" required min="1" class="w-full pl-10 pr-4 py-3 bg-white border-2 border-pink-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-bold text-lg text-slate-700" placeholder="0" value="50">
+                                <input type="number" id="price-per-num" required min="1" class="w-full pl-10 pr-4 py-3 bg-white border-2 border-yellow-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-bold text-lg text-slate-700" placeholder="0" value="50">
                             </div>
                         </div>
 
-                        <div class="pt-4 mt-2 border-t-2 border-dashed border-pink-100">
+                        <div class="pt-4 mt-2 border-t-2 border-dashed border-yellow-200">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-slate-500 font-semibold text-sm">จำนวนเลขที่เลือก</span>
                                 <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full"><span id="total-count">0</span> ตัว</span>
@@ -179,7 +188,7 @@
                                 <div id="qr-section" class="bg-white p-4 rounded-xl shadow-sm border border-blue-100 mb-3 flex flex-col items-center justify-center hidden transition-all">
                                     <p class="text-sm font-bold text-primary mb-2">สแกนจ่ายผ่านพร้อมเพย์</p>
                                     
-                                    <div class="relative bg-white p-2 rounded-xl border-2 border-pink-100 shadow-sm mb-3">
+                                    <div class="relative bg-white p-2 rounded-xl border-2 border-yellow-200 shadow-sm mb-3">
                                         <img id="promptpay-qr" src="" alt="QR Code" class="w-40 h-40 object-contain">
                                     </div>
                                     
@@ -192,18 +201,18 @@
                                 <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-blue-100">
                                     <div class="w-12 h-12 flex items-center justify-center shrink-0 bg-green-600 rounded-xl text-white font-black text-2xl shadow-sm">𝒦+</div>
                                     <div class="flex-1">
-                                        <p class="text-sm font-bold text-pink-600 leading-tight">น.ส สุกัญญา ธรรมบัวชา</p>
-                                        <p class="text-sm text-pink-600 font-medium font-sans mt-0.5" id="bank-acc">126-1-36691-2</p>
+                                        <p class="text-sm font-bold text-yellow-700 leading-tight">น.ส สุกัญญา ธรรมบัวชา</p>
+                                        <p class="text-sm text-yellow-700 font-medium font-sans mt-0.5" id="bank-acc">126-1-36691-2</p>
                                     </div>
                                     <button type="button" onclick="copyAccount()" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="คัดลอกเลขบัญชี">
                                         <i data-feather="copy" class="w-4 h-4"></i>
                                     </button>
                                 </div>
                                 
-                                <div id="slip-upload-container" class="mt-4 bg-white p-4 rounded-xl border-2 border-dashed border-pink-200 text-center relative">
+                                <div id="slip-upload-container" class="mt-4 bg-white p-4 rounded-xl border-2 border-dashed border-yellow-300 text-center relative">
                                     <label class="block text-sm font-bold text-slate-700 mb-2">อัปโหลดสลิปโอนเงิน</label>
                                     <input type="file" id="slip-file" accept="image/*" class="hidden" onchange="previewSlip(event)">
-                                    <label for="slip-file" class="cursor-pointer bg-pink-50 text-pink-600 px-4 py-2 rounded-lg font-semibold inline-block hover:bg-pink-100 transition-colors">
+                                    <label for="slip-file" class="cursor-pointer bg-yellow-50 text-yellow-600 px-4 py-2 rounded-lg font-semibold inline-block hover:bg-yellow-100 transition-colors">
                                         <i data-feather="upload-cloud" class="inline w-4 h-4 mr-1"></i> เลือกรูปสลิป
                                     </label>
                                     <div class="mt-3 relative w-full flex justify-center">
@@ -225,8 +234,8 @@
     </div>
 
     <div id="merge-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[150] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-90 transition-transform duration-300 shadow-2xl border-4 border-pink-100" id="merge-modal-content">
-            <div class="w-16 h-16 bg-pink-100 text-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-90 transition-transform duration-300 shadow-2xl border-4 border-yellow-200" id="merge-modal-content">
+            <div class="w-16 h-16 bg-yellow-100 text-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                 <i data-feather="layers" class="w-8 h-8"></i>
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">เจอบิลเดิมของคุณจ้า! 🛒</h3>
@@ -244,7 +253,7 @@
     </div>
 
     <div id="success-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-90 transition-transform duration-300 shadow-2xl border-4 border-pink-100" id="modal-content">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-90 transition-transform duration-300 shadow-2xl border-4 border-yellow-300" id="modal-content">
             <div class="relative w-20 h-20 mx-auto mb-4">
                 <div class="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-70" id="modal-ping-bg"></div>
                 <div class="relative w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto shadow-inner" id="modal-icon-bg">
@@ -252,12 +261,12 @@
                 </div>
             </div>
             <h3 class="text-2xl font-bold text-slate-800 mb-2" id="modal-title">รับยอดแล้วจ้า! 🎉</h3>
-            <p class="text-pink-600 mb-6 text-sm font-bold bg-pink-50 p-3 rounded-xl border border-pink-200" id="modal-desc">ขอบคุณที่อุดหนุนนะคะ ขอให้รวยๆ เฮงๆ จ้า 💖</p>
+            <p class="text-yellow-600 mb-6 text-sm font-bold bg-yellow-50 p-3 rounded-xl border border-yellow-200" id="modal-desc">ขอบคุณที่อุดหนุนนะคะ ขอให้รวยๆ เฮงๆ จ้า <span class="status-icon">💎</span></p>
             
-            <div class="bg-gradient-to-br from-pink-50 to-orange-50 p-5 rounded-2xl text-left mb-6 border border-pink-200 relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 text-pink-200/50 transform rotate-[-15deg] pointer-events-none"><i data-feather="award" class="w-24 h-24"></i></div>
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 p-5 rounded-2xl text-left mb-6 border border-yellow-200 relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 text-yellow-200/50 transform rotate-[-15deg] pointer-events-none"><i data-feather="award" class="w-24 h-24"></i></div>
                 <div class="relative z-10">
-                    <p class="text-sm text-slate-500 mb-2 border-b border-pink-200/50 pb-2">คุณลูกค้า: <span class="font-bold text-slate-800 text-base" id="receipt-name"></span></p>
+                    <p class="text-sm text-slate-500 mb-2 border-b border-yellow-200/50 pb-2">คุณลูกค้า: <span class="font-bold text-slate-800 text-base" id="receipt-name"></span></p>
                     <p class="text-sm text-slate-500 mb-2">เลขพารวย:</p>
                     <div class="font-bold text-primary text-lg mb-3 break-words" id="receipt-numbers"></div>
                     <p class="text-sm text-slate-500 flex justify-between items-center bg-white p-2 rounded-lg mb-2">
@@ -301,12 +310,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // 🚨 สร้างฐานข้อมูลชื่อใหม่ _v2 เพื่อหนีโค้ดล้างกระดานที่ติดอยู่ในมือถือของลูกค้า 🚨
-        const numbersRef = ref(db, 'sold_out_numbers_v2');
+        // 🚨 ชี้ไปที่ฐานข้อมูล _v2
+        const numbersRef = ref(db, 'sold_out_numbers_ptw2_v2'); 
 
         const IMGBB_API_KEY = "6d2a41cec565aa2179c542cdf1b05758";
-        const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
-        const TELEGRAM_CHAT_ID = "8151328238";
+        const TELEGRAM_TOKEN = "8998175177:AAGIWbp-1vbDQiNVMthTLwE15Ouvt6supso";
+        const TELEGRAM_CHAT_ID = "-1003556875992";
         const PROMPTPAY_ID = "0990322414"; 
 
         // ==========================================
@@ -350,7 +359,7 @@
         }
 
         // ==========================================
-        // ระบบ API ภายนอก (อัปโหลดรูป & Telegram)
+        // ระบบ API ภายนอก (อัปเดตระบบ Telegram ส่ง/แก้ไขข้อความ)
         // ==========================================
         async function uploadSlip(file) {
             const formData = new FormData(); formData.append('image', file);
@@ -362,10 +371,8 @@
         async function sendOrUpdateTelegram(message, existingMsgId = null) {
             let url = '';
             if (existingMsgId) {
-                // แก้ไขข้อความเดิม
                 url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/editMessageText?chat_id=${TELEGRAM_CHAT_ID}&message_id=${existingMsgId}&text=${encodeURIComponent(message)}`;
             } else {
-                // ส่งข้อความใหม่
                 url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}`;
             }
             try {
@@ -380,72 +387,107 @@
 
         let soldOutNumbers = [];
         let selectedNumbers = [];
+        let currentIcon = '💎'; // ไอคอนเริ่มต้น
 
         try { feather.replace(); } catch(e) {}
 
         // ==========================================
-        // ระบบเปลี่ยนธีมร้านค้าแบบ Dynamic
+        // ระบบเปลี่ยนธีม 3 สี สำหรับแผง 2 โดยเฉพาะ
         // ==========================================
         const themeStyles = {
-            pink: {
-                css: ``, 
-                icon: '𓆩♡𓆪',
-                falling: ['💖', '✨', '🌸', '💕']
-            },
-            gold: {
+            blue: {
                 css: `
-                    .text-primary { color: #F59E0B !important; }
-                    .bg-primary { background-color: #F59E0B !important; }
-                    .border-primary { border-color: #F59E0B !important; }
-                    .from-primary { --tw-gradient-from: #F59E0B !important; }
-                    .to-primaryDark { --tw-gradient-to: #B45309 !important; }
-                    .text-pink-500 { color: #D97706 !important; }
-                    .bg-pink-50 { background-color: #FFFBEB !important; }
-                    .bg-pink-100 { background-color: #FEF3C7 !important; }
-                    .border-pink-100 { border-color: #FDE68A !important; }
-                    .border-pink-200 { border-color: #FCD34D !important; }
-                    .text-pink-600 { color: #D97706 !important; }
-                    body { background-color: #FFFBEB !important; background-image: radial-gradient(#FDE68A 1px, transparent 1px) !important; }
+                    .text-primary { color: #0EA5E9 !important; }
+                    .bg-primary { background-color: #0EA5E9 !important; }
+                    .border-primary { border-color: #0EA5E9 !important; }
+                    .from-primary { --tw-gradient-from: #0EA5E9 !important; }
+                    .to-primaryDark { --tw-gradient-to: #0369A1 !important; }
+                    .text-yellow-600 { color: #0284C7 !important; }
+                    .bg-yellow-50 { background-color: #F0F9FF !important; }
+                    .bg-yellow-100 { background-color: #E0F2FE !important; }
+                    .border-yellow-200 { border-color: #BAE6FD !important; }
+                    .border-yellow-300 { border-color: #7DD3FC !important; }
+                    .border-yellow-400 { border-color: #38BDF8 !important; }
+                    .from-yellow-400 { --tw-gradient-from: #38BDF8 !important; }
+                    .from-yellow-600 { --tw-gradient-from: #0284C7 !important; }
+                    .via-yellow-400 { --tw-gradient-stops: var(--tw-gradient-from), #38BDF8, var(--tw-gradient-to) !important; }
+                    .to-yellow-600 { --tw-gradient-to: #0284C7 !important; }
+                    .bg-yellow-400 { background-color: #38BDF8 !important; }
+                    body { background-color: #F0F9FF !important; background-image: radial-gradient(#BAE6FD 1px, transparent 1px) !important; }
                 `,
-                icon: '𓆩♡𓆪',
-                falling: ['💰', '🪙', '✨', '💸']
+                icon: '💎',
+                falling: ['💎', '✨', '❄️', '💙']
             },
-            green: {
+            purple: {
                 css: `
-                    .text-primary { color: #10B981 !important; }
-                    .bg-primary { background-color: #10B981 !important; }
-                    .border-primary { border-color: #10B981 !important; }
-                    .from-primary { --tw-gradient-from: #10B981 !important; }
-                    .to-primaryDark { --tw-gradient-to: #047857 !important; }
-                    .text-pink-500 { color: #059669 !important; }
-                    .bg-pink-50 { background-color: #ECFDF5 !important; }
-                    .bg-pink-100 { background-color: #D1FAE5 !important; }
-                    .border-pink-100 { border-color: #A7F3D0 !important; }
-                    .border-pink-200 { border-color: #6EE7B7 !important; }
-                    .text-pink-600 { color: #059669 !important; }
-                    body { background-color: #ECFDF5 !important; background-image: radial-gradient(#A7F3D0 1px, transparent 1px) !important; }
+                    .text-primary { color: #A855F7 !important; }
+                    .bg-primary { background-color: #A855F7 !important; }
+                    .border-primary { border-color: #A855F7 !important; }
+                    .from-primary { --tw-gradient-from: #A855F7 !important; }
+                    .to-primaryDark { --tw-gradient-to: #7E22CE !important; }
+                    .text-yellow-600 { color: #9333EA !important; }
+                    .bg-yellow-50 { background-color: #FAF5FF !important; }
+                    .bg-yellow-100 { background-color: #F3E8FF !important; }
+                    .border-yellow-200 { border-color: #E9D5FF !important; }
+                    .border-yellow-300 { border-color: #D8B4FE !important; }
+                    .border-yellow-400 { border-color: #C084FC !important; }
+                    .from-yellow-400 { --tw-gradient-from: #C084FC !important; }
+                    .from-yellow-600 { --tw-gradient-from: #9333EA !important; }
+                    .via-yellow-400 { --tw-gradient-stops: var(--tw-gradient-from), #C084FC, var(--tw-gradient-to) !important; }
+                    .to-yellow-600 { --tw-gradient-to: #9333EA !important; }
+                    .bg-yellow-400 { background-color: #C084FC !important; }
+                    body { background-color: #FAF5FF !important; background-image: radial-gradient(#E9D5FF 1px, transparent 1px) !important; }
                 `,
-                icon: '𓆩♡𓆪',
-                falling: ['🍀', '💵', '✨', '💚']
+                icon: '🔮',
+                falling: ['🔮', '✨', '💜', '🌌']
+            },
+            orange: {
+                css: `
+                    .text-primary { color: #F97316 !important; }
+                    .bg-primary { background-color: #F97316 !important; }
+                    .border-primary { border-color: #F97316 !important; }
+                    .from-primary { --tw-gradient-from: #F97316 !important; }
+                    .to-primaryDark { --tw-gradient-to: #C2410C !important; }
+                    .text-yellow-600 { color: #EA580C !important; }
+                    .bg-yellow-50 { background-color: #FFF7ED !important; }
+                    .bg-yellow-100 { background-color: #FFEDD5 !important; }
+                    .border-yellow-200 { border-color: #FED7AA !important; }
+                    .border-yellow-300 { border-color: #FDBA74 !important; }
+                    .border-yellow-400 { border-color: #FB923C !important; }
+                    .from-yellow-400 { --tw-gradient-from: #FB923C !important; }
+                    .from-yellow-600 { --tw-gradient-from: #EA580C !important; }
+                    .via-yellow-400 { --tw-gradient-stops: var(--tw-gradient-from), #FB923C, var(--tw-gradient-to) !important; }
+                    .to-yellow-600 { --tw-gradient-to: #EA580C !important; }
+                    .bg-yellow-400 { background-color: #FB923C !important; }
+                    body { background-color: #FFF7ED !important; background-image: radial-gradient(#FED7AA 1px, transparent 1px) !important; }
+                `,
+                icon: '🧡',
+                falling: ['🧡', '✨', '🍊', '🔥']
             }
         };
 
         const styleTag = document.createElement('style');
         document.head.appendChild(styleTag);
 
-        onValue(ref(db, 'app_settings/current_theme'), (snapshot) => {
-            const currentTheme = snapshot.val() || 'pink';
+        onValue(ref(db, 'app_settings/current_theme_ptw2'), (snapshot) => {
+            const currentTheme = snapshot.val() || 'blue'; // ค่าเริ่มต้นเป็นสีฟ้าเพชร
             const themeConfig = themeStyles[currentTheme];
             
             if (themeConfig) {
                 styleTag.innerHTML = themeConfig.css;
+                currentIcon = themeConfig.icon;
+                
                 const mainIcon = document.getElementById('main-theme-icon');
-                if (mainIcon) mainIcon.innerText = themeConfig.icon;
+                if (mainIcon) mainIcon.innerText = currentIcon;
+                
+                document.querySelectorAll('.status-icon').forEach(el => el.innerText = currentIcon);
 
                 const fallingItems = document.querySelectorAll('.falling-item');
                 fallingItems.forEach(item => {
                     item.innerText = themeConfig.falling[Math.floor(Math.random() * themeConfig.falling.length)];
                 });
+                
+                window.renderGrid(); // รีเฟรชตารางเลขให้ไอคอนอัปเดต
             }
         });
 
@@ -453,10 +495,9 @@
             const container = document.createElement('div');
             container.className = 'fixed inset-0 pointer-events-none z-[-1] overflow-hidden';
             document.body.prepend(container);
-            const items = ['💖', '✨', '𓆩♡𓆪', '💕'];
             for (let i = 0; i < 25; i++) {
                 const el = document.createElement('div');
-                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.innerText = '💎'; // ค่าตั้งต้น
                 el.className = 'falling-item opacity-40 md:opacity-60'; 
                 el.style.left = `${Math.random() * 100}vw`;
                 el.style.fontSize = `${Math.random() * 1.5 + 0.8}rem`;
@@ -503,14 +544,14 @@
                 btn.className = `aspect-square flex items-center justify-center text-lg md:text-xl font-extrabold rounded-2xl border-2 transition-all duration-200 select-none `;
                 
                 if (soldOutNumbers.includes(numStr)) {
-                    btn.classList.add('bg-gradient-to-br', 'from-sky-50', 'to-purple-100', 'border-indigo-100', 'cursor-not-allowed', 'shadow-inner');
-                    btn.innerHTML = `<span class="text-xl md:text-2xl animate-float" style="animation-duration: 4s;">💙</span>`;
+                    btn.classList.add('bg-gradient-to-br', 'from-yellow-50', 'to-yellow-100', 'border-yellow-200', 'cursor-not-allowed', 'shadow-inner');
+                    btn.innerHTML = `<span class="text-2xl md:text-3xl drop-shadow-sm status-icon">${currentIcon}</span>`;
                     btn.disabled = true;
                 } else {
                     btn.innerText = numStr;
-                    btn.classList.add('bg-white', 'text-primary', 'border-pink-200', 'hover:border-primary', 'shadow-sm', 'btn-bounce');
+                    btn.classList.add('bg-white', 'text-primary', 'border-yellow-300', 'hover:border-primary', 'shadow-sm', 'btn-bounce');
                     if (selectedNumbers.includes(numStr)) {
-                        btn.classList.remove('bg-white', 'text-primary', 'border-pink-200');
+                        btn.classList.remove('bg-white', 'text-primary', 'border-yellow-300');
                         btn.classList.add('bg-primary', 'text-white', 'border-primary');
                     }
                     btn.onclick = () => window.toggleNumber(numStr, btn);
@@ -523,14 +564,14 @@
             playClickSound();
             const index = selectedNumbers.indexOf(numStr);
             if (index === -1) {
-                if (selectedNumbers.length >= 20) { alert("จองได้สูงสุด 20 เลขต่อครั้งจ้า 💖"); return; }
+                if (selectedNumbers.length >= 20) { alert(`จองได้สูงสุด 20 เลขต่อครั้งจ้า ${currentIcon}`); return; }
                 selectedNumbers.push(numStr);
-                btnElement.classList.remove('bg-white', 'text-primary', 'border-pink-200');
+                btnElement.classList.remove('bg-white', 'text-primary', 'border-yellow-300');
                 btnElement.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/40');
             } else {
                 selectedNumbers.splice(index, 1);
                 btnElement.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/40');
-                btnElement.classList.add('bg-white', 'text-primary', 'border-pink-200');
+                btnElement.classList.add('bg-white', 'text-primary', 'border-yellow-300');
             }
             selectedNumbers.sort((a, b) => parseInt(a) - parseInt(b));
             window.updateCart();
@@ -560,7 +601,7 @@
                 emptyMsg.style.display = 'none'; submitBtn.disabled = false;
                 selectedNumbers.forEach(num => {
                     const span = document.createElement('span');
-                    span.className = 'num-badge bg-white text-primary px-3 py-1.5 rounded-xl font-bold text-sm border-2 border-pink-200 shadow-sm animate-float-delayed';
+                    span.className = 'num-badge bg-white text-primary px-3 py-1.5 rounded-xl font-bold text-sm border-2 border-yellow-300 shadow-sm';
                     span.innerText = num; selectedListEl.appendChild(span);
                 });
                 
@@ -609,7 +650,7 @@
                 const a = document.createElement('a'); 
                 a.href = url;
                 const dateStr = new Date().toLocaleDateString('th-TH').replace(/\//g, '-');
-                a.download = `แผงหวยกัญญา_อัปเดต_${dateStr}.jpg`; 
+                a.download = `แผงทานตะวัน_${dateStr}.jpg`; 
                 
                 document.body.appendChild(a); 
                 a.click(); 
@@ -644,9 +685,6 @@
             else { preview.src = ""; preview.classList.add('hidden'); }
         };
 
-        // ==========================================
-        // ระบบ Modal ถามรวมบิล
-        // ==========================================
         window.showMergeModal = function(customerName) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('merge-modal');
@@ -679,9 +717,6 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         };
 
-        // ==========================================
-        // ระบบส่งข้อมูลการจอง (Submit)
-        // ==========================================
         const bookingForm = document.getElementById('booking-form');
         if(bookingForm) {
             bookingForm.addEventListener('submit', async function(e) {
@@ -711,7 +746,7 @@
                     let existingData = null;
 
                     // 🚨 ดึงข้อมูลจากฐานข้อมูล _v2 🚨
-                    const snapshot = await get(ref(db, 'customer_bookings_v2'));
+                    const snapshot = await get(ref(db, 'customer_bookings_ptw2_v2'));
                     if (snapshot.exists()) {
                         const bookings = snapshot.val();
                         let latestTime = 0;
@@ -771,12 +806,10 @@
                             finalTotalPrice = (existingData.totalPrice || 0) + totalNewPrice;
                             const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (มีสลิป)' : 'จ่ายทีหลัง';
                             
-                            alertMessage = `💖 ลูกค้าเก่าซื้อเพิ่ม (รวมบิล)!\n👤 ชื่อ: ${name}\n🔢 เลขใหม่ที่เพิ่ม: ${selectedNumbers.join(', ')} (${selectedNumbers.length} ตัว)\n📚 เลขรวมในบิล: ${finalNumbers.join(', ')}\n📌 จำนวนรวมทั้งหมด: ${finalNumbers.length} ตัว\n💰 ยอดรวมใหม่: ${finalTotalPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+                            alertMessage = `💎 ลูกค้าเก่าซื้อเพิ่ม (รวมบิล)!\n👤 ชื่อ: ${name}\n🔢 เลขใหม่ที่เพิ่ม: ${selectedNumbers.join(', ')} (${selectedNumbers.length} ตัว)\n📚 เลขรวมในบิล: ${finalNumbers.join(', ')}\n📌 จำนวนรวมทั้งหมด: ${finalNumbers.length} ตัว\n💰 ยอดรวมใหม่: ${finalTotalPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
 
-                            // 1. อัปเดตข้อความใน Telegram
                             telegramMsgId = await sendOrUpdateTelegram(alertMessage, existingData.telegramMessageId);
 
-                            // 2. อัปเดตข้อมูลใน Firebase _v2
                             const updateData = {
                                 selectedNumbers: finalNumbers,
                                 totalPrice: finalTotalPrice,
@@ -786,16 +819,15 @@
                                 timestamp: Date.now(),
                                 telegramMessageId: telegramMsgId || existingData.telegramMessageId
                             };
-                            await update(ref(db, `customer_bookings_v2/${mergeBookingId}`), updateData);
+                            // 🚨 อัปเดตฐานข้อมูล _v2 🚨
+                            await update(ref(db, `customer_bookings_ptw2_v2/${mergeBookingId}`), updateData);
 
                         } else {
                             const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (แนบสลิป)' : 'จ่ายทีหลัง';
-                            alertMessage = `💖 มีคนจองเลขใหม่!\n👤 ชื่อ: ${name}\n🔢 เลข: ${selectedNumbers.join(', ')}\n📌 จำนวนทั้งหมด: ${selectedNumbers.length} ตัว\n💰 ยอดรวม: ${totalNewPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+                            alertMessage = `💎 มีคนจองเลขใหม่!\n👤 ชื่อ: ${name}\n🔢 เลข: ${selectedNumbers.join(', ')}\n📌 จำนวนทั้งหมด: ${selectedNumbers.length} ตัว\n💰 ยอดรวม: ${totalNewPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
 
-                            // 1. ส่งข้อความใหม่ไป Telegram
                             telegramMsgId = await sendOrUpdateTelegram(alertMessage, null);
 
-                            // 2. บันทึกข้อมูลลง Firebase _v2
                             const bookingData = {
                                 customerName: name,
                                 selectedNumbers: selectedNumbers,
@@ -806,11 +838,12 @@
                                 timestamp: Date.now(),
                                 telegramMessageId: telegramMsgId 
                             };
-                            await set(push(ref(db, 'customer_bookings_v2')), bookingData);
+                            // 🚨 บันทึกฐานข้อมูล _v2 🚨
+                            await set(push(ref(db, 'customer_bookings_ptw2_v2')), bookingData);
                         }
 
                         if(document.getElementById('receipt-name')) document.getElementById('receipt-name').innerText = name;
-                        if(document.getElementById('receipt-numbers')) document.getElementById('receipt-numbers').innerHTML = finalNumbers.map(n => `<span class="inline-block bg-pink-100 text-primary px-2 py-1 rounded-md m-0.5 border border-pink-200 shadow-sm">${n}</span>`).join(' ');
+                        if(document.getElementById('receipt-numbers')) document.getElementById('receipt-numbers').innerHTML = finalNumbers.map(n => `<span class="inline-block bg-yellow-100 text-primary px-2 py-1 rounded-md m-0.5 border border-yellow-200 shadow-sm">${n}</span>`).join(' ');
                         if(document.getElementById('receipt-total')) document.getElementById('receipt-total').innerText = finalTotalPrice.toLocaleString();
 
                         const statusEl = document.getElementById('receipt-status');
@@ -823,12 +856,12 @@
                             statusEl.innerHTML = '<i data-feather="check-circle" class="w-4 h-4"></i> ซื้อและโอนเงินเรียบร้อย'; 
                             statusEl.className = 'text-xs text-green-700 font-bold flex items-center justify-center gap-1.5 bg-green-100 py-2 rounded-lg border border-green-300';
                             modalTitle.innerText = mergeBookingId ? "รวมบิลสำเร็จ! 🎉" : "สำเร็จแล้วจ้า! 🎉";
-                            modalDesc.innerText = "ระบบได้รับสลิปของคุณเรียบร้อยแล้ว หากมีข้อสงสัยกดปุ่มติดต่อแม่ค้าด้านล่างได้เลยจ้า 💖";
+                            modalDesc.innerHTML = `ขอบคุณที่อุดหนุนนะคะ ขอให้รวยๆ เฮงๆ จ้า <span class="status-icon">${currentIcon}</span>`;
                         } else {
                             statusEl.innerHTML = '<i data-feather="clock" class="w-4 h-4"></i> ซื้อสำเร็จ (รอการชำระเงิน)'; 
                             statusEl.className = 'text-xs text-amber-700 font-bold flex items-center justify-center gap-1.5 bg-amber-100 py-2 rounded-lg border border-amber-300';
                             modalTitle.innerText = mergeBookingId ? "รวมบิลสำเร็จ! ⏱️" : "จองเลขสำเร็จ! ⏱️";
-                            modalDesc.innerText = "แคปหน้าจอนี้ แล้วกดปุ่ม 'ทักแชท' ด้านล่าง เพื่อส่งหลักฐานการจองและโอนเงินทีหลังได้เลยนะคะ 💖";
+                            modalDesc.innerHTML = `แคปหน้าจอนี้ แล้วกดปุ่ม 'ทักแชท' ด้านล่าง เพื่อส่งหลักฐานการจองและโอนเงินทีหลังได้เลยนะคะ <span class="status-icon">${currentIcon}</span>`;
                         }
                         try { feather.replace(); } catch(e){}
 
@@ -861,14 +894,14 @@
 
         window.togglePayment = function(radio) {
             document.querySelectorAll('.payment-option').forEach(opt => {
-                opt.classList.remove('border-pink-300', 'bg-pink-50'); opt.classList.add('border-slate-200', 'bg-white');
+                opt.classList.remove('border-yellow-400', 'bg-yellow-50'); opt.classList.add('border-slate-200', 'bg-white');
                 const pt = opt.querySelector('.payment-text'); const pi = opt.querySelector('.payment-icon');
                 if(pt) { pt.classList.remove('text-primaryDark'); pt.classList.add('text-slate-500'); }
                 if(pi) { pi.classList.remove('text-primary'); pi.classList.add('text-slate-400'); }
             });
             const parent = radio.closest('.payment-option');
             if(parent) {
-                parent.classList.remove('border-slate-200', 'bg-white'); parent.classList.add('border-pink-300', 'bg-pink-50');
+                parent.classList.remove('border-slate-200', 'bg-white'); parent.classList.add('border-yellow-400', 'bg-yellow-50');
                 const pt = parent.querySelector('.payment-text'); const pi = parent.querySelector('.payment-icon');
                 if(pt) { pt.classList.remove('text-slate-500'); pt.classList.add('text-primaryDark'); }
                 if(pi) { pi.classList.remove('text-slate-400'); pi.classList.add('text-primary'); }
@@ -909,9 +942,6 @@
             } 
         }
 
-        // ==========================================
-        // ระบบปิดหน้าต่าง พร้อมคำสั่งเคลียร์ช่องชื่อลูกค้า 100%
-        // ==========================================
         window.closeModal = function() {
             const modal = document.getElementById('success-modal');
             const modalContent = document.getElementById('modal-content');
