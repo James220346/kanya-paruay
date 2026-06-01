@@ -300,7 +300,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const numbersRef = ref(db, 'sold_out_numbers');
+        
+        // 🚨 สร้างฐานข้อมูลชื่อใหม่ _v2 เพื่อหนีโค้ดล้างกระดานที่ติดอยู่ในมือถือของลูกค้า 🚨
+        const numbersRef = ref(db, 'sold_out_numbers_v2');
 
         const IMGBB_API_KEY = "6d2a41cec565aa2179c542cdf1b05758";
         const TELEGRAM_TOKEN = "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8";
@@ -348,7 +350,7 @@
         }
 
         // ==========================================
-        // ระบบ API ภายนอก
+        // ระบบ API ภายนอก (อัปโหลดรูป & Telegram)
         // ==========================================
         async function uploadSlip(file) {
             const formData = new FormData(); formData.append('image', file);
@@ -357,9 +359,23 @@
             return data.data.url;
         }
 
-        async function sendToTelegram(message) {
-            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}`;
-            try { await fetch(url); } catch (e) { console.error(e); }
+        async function sendOrUpdateTelegram(message, existingMsgId = null) {
+            let url = '';
+            if (existingMsgId) {
+                // แก้ไขข้อความเดิม
+                url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/editMessageText?chat_id=${TELEGRAM_CHAT_ID}&message_id=${existingMsgId}&text=${encodeURIComponent(message)}`;
+            } else {
+                // ส่งข้อความใหม่
+                url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}`;
+            }
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.ok) {
+                    return data.result.message_id; 
+                }
+            } catch (e) { console.error("Telegram Error:", e); }
+            return null;
         }
 
         let soldOutNumbers = [];
@@ -471,7 +487,8 @@
         setInterval(updateClock, 1000); updateClock();
 
         onValue(numbersRef, (snapshot) => {
-            soldOutNumbers = snapshot.val() || [];
+            const val = snapshot.val();
+            soldOutNumbers = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
             window.renderGrid();
         });
 
@@ -557,9 +574,6 @@
             if(totalPriceEl) totalPriceEl.innerText = total.toLocaleString();
         };
 
-        // ==========================================
-        // ระบบแคปหน้าจอจัดเรียง 10 คอลัมน์ (อัปเดตแล้ว)
-        // ==========================================
         window.captureBoard = async function() {
             const boardElement = document.getElementById('board-capture-area');
             if(!boardElement) return;
@@ -696,7 +710,8 @@
                     let mergeBookingId = null;
                     let existingData = null;
 
-                    const snapshot = await get(ref(db, 'customer_bookings'));
+                    // 🚨 ดึงข้อมูลจากฐานข้อมูล _v2 🚨
+                    const snapshot = await get(ref(db, 'customer_bookings_v2'));
                     if (snapshot.exists()) {
                         const bookings = snapshot.val();
                         let latestTime = 0;
@@ -726,7 +741,7 @@
                     try { feather.replace(); } catch(e){}
 
                     const res = await runTransaction(numbersRef, (currentData) => {
-                        let sold = currentData || [];
+                        let sold = currentData ? (Array.isArray(currentData) ? currentData : Object.values(currentData)) : [];
                         if (selectedNumbers.some(n => sold.includes(n))) return; 
                         return [...sold, ...selectedNumbers];
                     });
@@ -749,26 +764,38 @@
                         let finalNumbers = selectedNumbers;
                         let finalTotalPrice = totalNewPrice;
                         let alertMessage = "";
+                        let telegramMsgId = null;
 
-                        // ✅ อัปเดตข้อความ Telegram เพิ่มจำนวนยอดซื้อเข้าไปให้ชัดเจน
                         if (mergeBookingId) {
                             finalNumbers = [...(existingData.selectedNumbers || []), ...selectedNumbers];
                             finalTotalPrice = (existingData.totalPrice || 0) + totalNewPrice;
+                            const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (มีสลิป)' : 'จ่ายทีหลัง';
                             
+                            alertMessage = `💖 ลูกค้าเก่าซื้อเพิ่ม (รวมบิล)!\n👤 ชื่อ: ${name}\n🔢 เลขใหม่ที่เพิ่ม: ${selectedNumbers.join(', ')} (${selectedNumbers.length} ตัว)\n📚 เลขรวมในบิล: ${finalNumbers.join(', ')}\n📌 จำนวนรวมทั้งหมด: ${finalNumbers.length} ตัว\n💰 ยอดรวมใหม่: ${finalTotalPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+
+                            // 1. อัปเดตข้อความใน Telegram
+                            telegramMsgId = await sendOrUpdateTelegram(alertMessage, existingData.telegramMessageId);
+
+                            // 2. อัปเดตข้อมูลใน Firebase _v2
                             const updateData = {
                                 selectedNumbers: finalNumbers,
                                 totalPrice: finalTotalPrice,
                                 paymentMethod: paymentType, 
                                 slipImageUrl: slipUrl, 
                                 lastUpdated: new Date().toLocaleString('th-TH'),
-                                timestamp: Date.now()
+                                timestamp: Date.now(),
+                                telegramMessageId: telegramMsgId || existingData.telegramMessageId
                             };
-                            await update(ref(db, `customer_bookings/${mergeBookingId}`), updateData);
-                            
-                            const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (มีสลิป)' : 'จ่ายทีหลัง';
-                            alertMessage = `🎉 ลูกค้าเก่าซื้อเพิ่ม (รวมบิล)!\n👤 ชื่อ: ${name}\n🔢 เลขใหม่ที่เพิ่ม: ${selectedNumbers.join(', ')} (${selectedNumbers.length} ตัว)\n📚 เลขรวมในบิล: ${finalNumbers.join(', ')}\n📌 จำนวนรวมทั้งหมด: ${finalNumbers.length} ตัว\n💰 ยอดรวมใหม่: ${finalTotalPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+                            await update(ref(db, `customer_bookings_v2/${mergeBookingId}`), updateData);
 
                         } else {
+                            const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (แนบสลิป)' : 'จ่ายทีหลัง';
+                            alertMessage = `💖 มีคนจองเลขใหม่!\n👤 ชื่อ: ${name}\n🔢 เลข: ${selectedNumbers.join(', ')}\n📌 จำนวนทั้งหมด: ${selectedNumbers.length} ตัว\n💰 ยอดรวม: ${totalNewPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+
+                            // 1. ส่งข้อความใหม่ไป Telegram
+                            telegramMsgId = await sendOrUpdateTelegram(alertMessage, null);
+
+                            // 2. บันทึกข้อมูลลง Firebase _v2
                             const bookingData = {
                                 customerName: name,
                                 selectedNumbers: selectedNumbers,
@@ -776,15 +803,11 @@
                                 paymentMethod: paymentType,
                                 slipImageUrl: slipUrl,
                                 purchaseDate: new Date().toLocaleString('th-TH'),
-                                timestamp: Date.now()
+                                timestamp: Date.now(),
+                                telegramMessageId: telegramMsgId 
                             };
-                            await set(push(ref(db, 'customer_bookings')), bookingData);
-                            
-                            const payMethodText = paymentType === 'pay_now' ? 'โอนเลย (แนบสลิป)' : 'จ่ายทีหลัง';
-                            alertMessage = `🎉 มีคนจองเลขใหม่!\n👤 ชื่อ: ${name}\n🔢 เลข: ${selectedNumbers.join(', ')}\n📌 จำนวนทั้งหมด: ${selectedNumbers.length} ตัว\n💰 ยอดรวม: ${totalNewPrice} บาท\n💳 วิธีจ่าย: ${payMethodText}\n🧾 สลิป: ${slipUrl}`;
+                            await set(push(ref(db, 'customer_bookings_v2')), bookingData);
                         }
-
-                        await sendToTelegram(alertMessage);
 
                         if(document.getElementById('receipt-name')) document.getElementById('receipt-name').innerText = name;
                         if(document.getElementById('receipt-numbers')) document.getElementById('receipt-numbers').innerHTML = finalNumbers.map(n => `<span class="inline-block bg-pink-100 text-primary px-2 py-1 rounded-md m-0.5 border border-pink-200 shadow-sm">${n}</span>`).join(' ');
@@ -887,7 +910,7 @@
         }
 
         // ==========================================
-        // ระบบปิดหน้าต่าง พร้อมคำสั่งเคลียร์ช่องชื่อลูกค้า
+        // ระบบปิดหน้าต่าง พร้อมคำสั่งเคลียร์ช่องชื่อลูกค้า 100%
         // ==========================================
         window.closeModal = function() {
             const modal = document.getElementById('success-modal');
@@ -901,7 +924,6 @@
                 selectedNumbers = [];
                 document.getElementById('price-per-num').value = '50';
                 
-                // ✅ คำสั่งล้างช่องชื่อลูกค้าให้กลับมาเป็นค่าว่างทุกครั้งเมื่อปิดบิลสำเร็จ
                 const buyerNameInput = document.getElementById('buyer-name');
                 if (buyerNameInput) buyerNameInput.value = '';
                 
