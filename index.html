@@ -367,20 +367,6 @@
 
         try { feather.replace(); } catch(e) {}
 
-        const checkAutoReset = () => {
-            try {
-                const day = new Date().getDate();
-                if (day === 1 || day === 16) {
-                    const lastReset = localStorage.getItem('lastResetDate');
-                    if (lastReset !== new Date().toDateString()) {
-                        set(numbersRef, []); set(ref(db, 'customer_bookings'), []);
-                        localStorage.setItem('lastResetDate', new Date().toDateString());
-                    }
-                }
-            } catch(e) {}
-        };
-        checkAutoReset();
-
         // ==========================================
         // ระบบเปลี่ยนธีมร้านค้าแบบ Dynamic
         // ==========================================
