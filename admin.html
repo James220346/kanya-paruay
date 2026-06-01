@@ -232,7 +232,7 @@
                 <i data-feather="trash-2" class="w-10 h-10 text-rose-500 relative z-10"></i>
             </div>
             <h3 class="text-2xl font-bold text-slate-800 mb-2">ยึดคืนตัวเลข?</h3>
-            <p class="text-slate-500 mb-6 font-medium">ยืนยันการยกเลิกบิลออเดอร์นี้ และคืนตัวเลขกลับสู่แผงขายให้ลูกค้าคนอื่น</p>
+            <p class="text-slate-500 mb-6 font-medium">ยืนยันการยกเลิกบิลออเดอร์นี้ และลบแจ้งเตือนออกจาก Telegram</p>
             <div class="bg-slate-50 rounded-xl p-3 mb-6 border border-slate-100">
                 <span class="text-xs text-slate-400 block mb-1">เลขที่จะยึดคืน:</span>
                 <span id="delete-numbers-display" class="font-bold text-indigo-600 text-lg tracking-wider"></span>
@@ -261,6 +261,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // ==========================================
+        // ตั้งค่า Token ของบอท Telegram สำหรับแต่ละแผง
+        // ==========================================
+        const TELEGRAM_CONFIG = {
+            1: { token: "8908660694:AAFxsLrsD89_cuSjDUjEmHfZyzNtqDvccF8", chatId: "8151328238" }, // แผงกัญญา
+            2: { token: "8998175177:AAGIWbp-1vbDQiNVMthTLwE15Ouvt6supso", chatId: "-1003556875992" } // แผงทานตะวัน (Ptw)
+        };
+
         feather.replace({ 'stroke-width': 2.5 });
 
         // สถานะของแผงปัจจุบัน (1 หรือ 2)
@@ -278,6 +286,14 @@
         let pendingPaidId = null;
         let pendingDeleteId = null;
         let pendingDeleteNumbers = "";
+
+        // ฟังก์ชันสั่งลบข้อความใน Telegram
+        async function deleteTelegramMessage(msgId) {
+            if (!msgId) return;
+            const config = TELEGRAM_CONFIG[currentPanel];
+            const url = `https://api.telegram.org/bot${config.token}/deleteMessage?chat_id=${config.chatId}&message_id=${msgId}`;
+            try { await fetch(url); } catch (e) { console.error("Error deleting Telegram message", e); }
+        }
 
         // ==========================================
         // ระบบสลับแผง (Panel Switcher)
@@ -308,30 +324,30 @@
             feather.replace({ 'stroke-width': 2.5 });
         }
 
-        // ฟังชันช่วยดึง Path ของฐานข้อมูล
-        const getBooksPath = () => currentPanel === 1 ? 'customer_bookings' : 'customer_bookings_ptw2';
-        const getNumsPath = () => currentPanel === 1 ? 'sold_out_numbers' : 'sold_out_numbers_ptw2';
+        // 🚨 อัปเดตฟังก์ชันดึง Path ฐานข้อมูลให้เป็น _v2
+        const getBooksPath = () => currentPanel === 1 ? 'customer_bookings_v2' : 'customer_bookings_ptw2_v2';
+        const getNumsPath = () => currentPanel === 1 ? 'sold_out_numbers_v2' : 'sold_out_numbers_ptw2_v2';
 
         // ==========================================
-        // โหลดข้อมูลแผงที่ 1 (กัญญา)
+        // โหลดข้อมูลแผงที่ 1 (กัญญา) -> ฐานข้อมูลใหม่ _v2
         // ==========================================
-        onValue(ref(db, 'sold_out_numbers'), (snap) => { 
+        onValue(ref(db, 'sold_out_numbers_v2'), (snap) => { 
             p1Sold = snap.val() || []; 
             if(currentPanel === 1) { globalSoldNumbers = p1Sold; updateDashboard(); }
         });
-        onValue(ref(db, 'customer_bookings'), (snap) => { 
+        onValue(ref(db, 'customer_bookings_v2'), (snap) => { 
             p1Bookings = snap.val() || {}; 
             if(currentPanel === 1) { globalBookings = p1Bookings; renderTable(); updateDashboard(); }
         });
 
         // ==========================================
-        // โหลดข้อมูลแผงที่ 2 (ทานตะวัน)
+        // โหลดข้อมูลแผงที่ 2 (ทานตะวัน) -> ฐานข้อมูลใหม่ _v2
         // ==========================================
-        onValue(ref(db, 'sold_out_numbers_ptw2'), (snap) => { 
+        onValue(ref(db, 'sold_out_numbers_ptw2_v2'), (snap) => { 
             p2Sold = snap.val() || []; 
             if(currentPanel === 2) { globalSoldNumbers = p2Sold; updateDashboard(); }
         });
-        onValue(ref(db, 'customer_bookings_ptw2'), (snap) => { 
+        onValue(ref(db, 'customer_bookings_ptw2_v2'), (snap) => { 
             p2Bookings = snap.val() || {}; 
             if(currentPanel === 2) { globalBookings = p2Bookings; renderTable(); updateDashboard(); }
         });
@@ -394,7 +410,7 @@
         });
 
         // ==========================================
-        // ยึดคืนตัวเลข
+        // ยึดคืนตัวเลข + ลบแชท Telegram บิลนั้นๆ
         // ==========================================
         window.deleteAndReturnNumbers = function(bookingId, numbersString) {
             pendingDeleteId = bookingId;
@@ -424,9 +440,17 @@
             feather.replace();
 
             try {
+                // 1. ดึงข้อมูลบิลเพื่อหารหัส Telegram Message ID ก่อนลบทิ้ง
+                const bookingData = globalBookings[pendingDeleteId];
+                if (bookingData && bookingData.telegramMessageId) {
+                    await deleteTelegramMessage(bookingData.telegramMessageId);
+                }
+
+                // 2. ลบเลขออกจากกระดาน และลบบิลออกจากฐานข้อมูล
                 const numbersArr = pendingDeleteNumbers.split(',');
                 await runTransaction(ref(db, getNumsPath()), (current) => current ? current.filter(n => !numbersArr.includes(n)) : []);
                 await remove(ref(db, `${getBooksPath()}/${pendingDeleteId}`));
+                
                 window.closeDeleteModal();
                 setTimeout(() => { btn.innerHTML = originalContent; }, 300);
             } catch (error) {
@@ -436,14 +460,28 @@
         });
 
         // ==========================================
-        // ล้างกระดาน (ตามแผงที่เลือก)
+        // ล้างกระดาน (ตามแผงที่เลือก) + ทยอยลบ Telegram
         // ==========================================
         window.clearEntireBoard = async function() {
             const panelName = currentPanel === 1 ? "แผงที่ 1 (กัญญา)" : "แผงที่ 2 (ทานตะวัน)";
-            if (confirm(`⚠️ ล้างกระดานและบิลทั้งหมดของ [${panelName}]?`) && prompt("พิมพ์ 'ยืนยัน' เพื่อดำเนินการ") === "ยืนยัน") {
+            if (confirm(`⚠️ คำเตือน!\nคุณกำลังจะล้างกระดานและบิลทั้งหมดของ [${panelName}]\n(รวมถึงลบประวัติการแจ้งเตือนทั้งหมดใน Telegram ด้วย)\n\nคุณแน่ใจหรือไม่?`) && prompt("พิมพ์คำว่า 'ยืนยัน' เพื่อดำเนินการ") === "ยืนยัน") {
+                
+                // 1. เก็บ ID ของทุกข้อความใน Telegram เตรียมไว้ลบ
+                const msgIdsToDelete = Object.values(globalBookings)
+                                            .map(b => b.telegramMessageId)
+                                            .filter(id => id); // เอาเฉพาะบิลที่มี ID แชท
+
+                // 2. เคลียร์ฐานข้อมูลให้หน้าเว็บขาวสะอาดทันที
                 await set(ref(db, getNumsPath()), []);
                 await set(ref(db, getBooksPath()), []);
-                alert(`ล้างกระดาน ${panelName} เรียบร้อยแล้ว`);
+                
+                alert(`ล้างกระดาน ${panelName} ในระบบเรียบร้อยแล้ว!\n(ระบบกำลังทยอยล้างแชท Telegram ในพื้นหลัง กรุณารอสักครู่นะครับ)`);
+
+                // 3. ทยอยลบข้อความใน Telegram (หน่วงเวลาข้อความละ 0.5 วิ เพื่อป้องกันโดนบล็อกชั่วคราว)
+                for (let i = 0; i < msgIdsToDelete.length; i++) {
+                    await deleteTelegramMessage(msgIdsToDelete[i]);
+                    await new Promise(resolve => setTimeout(resolve, 500)); 
+                }
             }
         }
 
