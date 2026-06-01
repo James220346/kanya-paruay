@@ -172,24 +172,21 @@
             </div>
         </div>
         
-        <div class="flex justify-center mt-6">
+        <div class="flex flex-col md:flex-row justify-center mt-6 gap-6">
             <div class="glass-panel px-8 py-4 rounded-full flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
-                <span class="text-sm font-bold text-purple-600 flex items-center gap-2">
-                    <i data-feather="aperture" class="w-4 h-4"></i> สีหน้าร้านลูกค้า:
-                </span>
-                <button onclick="changeTheme('pink')" class="group relative w-10 h-10 rounded-full bg-pink-100 border-2 border-pink-400 hover:scale-110 transition-all flex items-center justify-center">
-                    <span class="absolute inset-0 rounded-full bg-pink-400 opacity-0 group-hover:opacity-20 transition-opacity animate-ping"></span>
-                </button>
-                <button onclick="changeTheme('gold')" class="group relative w-10 h-10 rounded-full bg-amber-100 border-2 border-amber-400 hover:scale-110 transition-all flex items-center justify-center">
-                    <span class="absolute inset-0 rounded-full bg-amber-400 opacity-0 group-hover:opacity-20 transition-opacity animate-ping"></span>
-                </button>
-                <button onclick="changeTheme('green')" class="group relative w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-400 hover:scale-110 transition-all flex items-center justify-center">
-                    <span class="absolute inset-0 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-20 transition-opacity animate-ping"></span>
-                </button>
+                <span class="text-sm font-bold text-purple-600 flex items-center gap-2">แผงที่ 1:</span>
+                <button onclick="changeTheme('pink')" class="group relative w-10 h-10 rounded-full bg-pink-100 border-2 border-pink-400 hover:scale-110 transition-all flex items-center justify-center"></button>
+                <button onclick="changeTheme('gold')" class="group relative w-10 h-10 rounded-full bg-amber-100 border-2 border-amber-400 hover:scale-110 transition-all flex items-center justify-center"></button>
+                <button onclick="changeTheme('green')" class="group relative w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-400 hover:scale-110 transition-all flex items-center justify-center"></button>
+            </div>
+
+            <div class="glass-panel px-8 py-4 rounded-full flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+                <span class="text-sm font-bold text-purple-600 flex items-center gap-2">แผงที่ 2:</span>
+                <button onclick="changeTheme('blue')" class="group relative w-10 h-10 rounded-full bg-blue-100 border-2 border-blue-400 hover:scale-110 transition-all flex items-center justify-center" title="ฟ้าเพชร"></button>
+                <button onclick="changeTheme('purple')" class="group relative w-10 h-10 rounded-full bg-purple-100 border-2 border-purple-400 hover:scale-110 transition-all flex items-center justify-center" title="ม่วงเวทมนตร์"></button>
+                <button onclick="changeTheme('orange')" class="group relative w-10 h-10 rounded-full bg-orange-100 border-2 border-orange-400 hover:scale-110 transition-all flex items-center justify-center" title="ส้มสดใส"></button>
             </div>
         </div>
-    </div>
-
     <div id="slip-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white/95 backdrop-blur-xl rounded-[2rem] max-w-md w-full overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 border border-white" id="slip-modal-content">
             <div class="px-6 py-4 flex justify-between items-center bg-slate-50/80 border-b border-slate-100">
@@ -354,7 +351,14 @@
 
 
         window.changeTheme = async function(themeName) {
-            try { await set(ref(db, 'app_settings/current_theme'), themeName); } catch (error) {}
+            try { 
+                // ถ้าอยู่แผงที่ 1 ให้เปลี่ยนสีแผงกัญญา ถ้าอยู่แผงที่ 2 ให้เปลี่ยนสีแผงทานตะวัน
+                if (currentPanel === 1) {
+                    await set(ref(db, 'app_settings/current_theme'), themeName); 
+                } else {
+                    await set(ref(db, 'app_settings/current_theme_ptw2'), themeName); 
+                }
+            } catch (error) {}
         }
 
         window.openSlipModal = function(url) {
